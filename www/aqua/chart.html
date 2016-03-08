@@ -1,0 +1,460 @@
+<?php
+
+//extract($HTTP_GET_VARS); 
+//extract($HTTP_POST_VARS); 
+//extract($HTTP_SERVER_VARS); 
+//extract($HTTP_ENV_VARS);
+extract($_POST);
+extract($_GET);
+
+$host_name="localhost";   //수정하지 마세요
+$user_name="leaqua";      //mysql DB 유저네임
+$user_passwd="123wasd";    //myslq DB 패스워드
+$db_name="leaqua";	      //사용할 DB 이름
+
+$table="leaqua";       //생성한 table code
+
+$page_scale="15"; // 1화면당 페이지수
+$page_count = 25; // 1 페이지 당 목록수
+
+$admin_level = 1;
+
+$connect = mysql_connect("$host_name","$user_name","$user_passwd");
+mysql_select_db($db_name,$connect);
+
+if(!$date) { 
+	$que = "select * from $table where mid( date, 1, 10 ) = curdate() ORDER BY date ASC";
+} 
+else {
+	$que = "select * from $table where mid( date, 1, 10 ) = '$date' ORDER BY date ASC";
+}
+
+$result = mysql_query($que,$connect);
+$row = mysql_affected_rows();
+$total = $row;
+?>
+
+
+<!doctype html>
+<html>
+    
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>LeAqua Chart</title>
+        <link rel="stylesheet" href="amchart_style.css"  type="text/css">
+        <script src="amcharts/amcharts.js" type="text/javascript"></script>        
+				<script type="text/javascript" src="/aqua/amcharts/amcharts.js"></script>
+				<script type="text/javascript" src="/aqua/amcharts/serial.js"></script>
+				<script type="text/javascript" src="/aqua/amcharts/themes/none.js"></script>        
+        <script type="text/javascript">
+            var chart;
+            var chartData = [
+            <?php
+							for ($i=0 ; $i < $total ; $i++){
+								mysql_data_seek($result,$i);
+								$row =mysql_fetch_array($result);
+								$_date = substr($row[date],11,8);
+								$_temp = $row[temp];
+								$_orp = $row[orp];
+								$_ph = $row[ph];
+								if ($row[REL4]) {	$_heater = "1"; }	else {	$_heater = "-"; }
+								if ($row[REL3]) {	$_cooler = "2"; } else {	$_cooler = "-"; }
+								if ($row[REL1]) {	$_light = "3"; }	else {	$_light = "-"; }
+								if ($row[REL2]) {	$_co2 = "4"; } else {	$_co2 = "-"; }	
+						?>
+            {
+                DateTimes: '<?php echo $_date;?>',
+                Temp: '<?php echo $_temp;?>',
+                PH: '<?php echo $_ph;?>',
+                ORP: '<?php echo $_orp;?>',
+                Heater: '<?php echo $_heater;?>',
+                Cooler: '<?php echo $_cooler;?>',
+                Light: '<?php echo $_light;?>',
+                Co2: '<?php echo $_co2;?>'
+            }, 
+            <?php
+          } // end of For
+          ?>
+            ];
+
+           AmCharts.ready(function () {
+
+               // SERIAL CHART
+               chart = new AmCharts.AmSerialChart();
+               chart.pathToImages = "/aqua/amcharts/images/";
+               chart.dataProvider = chartData;
+               chart.categoryField = "DateTimes";
+							 chart.numberFormatter = {precision:-1,decimalSeparator:",",thousandsSeparator:""};
+							 chart.panEventsEnabled = false;
+               //listen for "dataUpdated" event (fired when chart is inited) and call zoomChart method when it happens
+               //chart.addListener("dataUpdated", zoomChart);
+
+               // AXES
+               // category
+               var categoryAxis = chart.categoryAxis;
+               //categoryAxis.parseDates = true; // as our data is date-based, we set parseDates to true
+               categoryAxis.minPeriod = "DD"; // our data is daily, so we set minPeriod to DD
+               categoryAxis.minorGridEnabled = false;
+               categoryAxis.axisColor = "#DADADA";
+               categoryAxis.twoLineMode = true;
+
+               // first value axis (on the left)
+               var valueAxis1 = new AmCharts.ValueAxis();
+               valueAxis1.axisColor = "#FF6600";
+               valueAxis1.axisThickness = 2;
+               valueAxis1.gridAlpha = 0;
+               valueAxis1.minimum = 0;
+               valueAxis1.maximum = 50;
+               chart.addValueAxis(valueAxis1);
+
+               // second value axis (on the right)
+               var valueAxis2 = new AmCharts.ValueAxis();
+               valueAxis2.position = "right"; // this line makes the axis to appear on the right
+               valueAxis2.axisColor = "#FCD202";
+               valueAxis2.gridAlpha = 0;
+               valueAxis2.axisThickness = 2;
+               valueAxis2.minimum = 0;
+               valueAxis2.maximum = 14;
+               chart.addValueAxis(valueAxis2);
+
+               // third value axis (on the left, detached)
+               valueAxis3 = new AmCharts.ValueAxis();
+               valueAxis3.offset = 50; // this line makes the axis to appear detached from plot area
+               valueAxis3.gridAlpha = 0;
+               valueAxis3.axisColor = "#B0DE09";
+               valueAxis3.axisThickness = 2;
+               valueAxis3.minimum = -2500;
+               valueAxis3.maximum = 2500;               
+               chart.addValueAxis(valueAxis3);
+
+               // GRAPHS
+               // first graph
+               var graph1 = new AmCharts.AmGraph();
+               graph1.valueAxis = valueAxis1; // we have to indicate which value axis should be used
+               graph1.type = "smoothedLine";
+               graph1.title = "Temp";
+               graph1.valueField = "Temp";
+               graph1.bullet = "none";
+               graph1.balloonText = "[[value]]도";
+               graph1.hideBulletsCount = 30;
+               graph1.bulletBorderThickness = 1;
+               chart.addGraph(graph1);
+
+               // second graph
+               var graph2 = new AmCharts.AmGraph();
+               graph2.valueAxis = valueAxis2; // we have to indicate which value axis should be used
+               graph2.type = "smoothedLine";
+               graph2.title = "PH";
+               graph2.valueField = "PH";
+               graph2.bullet = "none";
+               graph2.balloonText = "PH [[value]]";
+               graph2.hideBulletsCount = 30;
+               graph2.bulletBorderThickness = 1;
+               chart.addGraph(graph2);
+
+               // third graph
+               var graph3 = new AmCharts.AmGraph();
+               graph3.valueAxis = valueAxis3; // we have to indicate which value axis should be used
+               graph3.type = "smoothedLine";
+               graph3.valueField = "ORP";
+               graph3.title = "ORP";
+               graph3.bullet = "none";
+               graph3.balloonText = "ORP [[value]]mv";
+               graph3.hideBulletsCount = 30;
+               graph3.bulletBorderThickness = 1;
+               chart.addGraph(graph3);
+
+                // Heater graph
+                var graph4 = new AmCharts.AmGraph();
+                graph4.title = "Heater";
+                graph4.valueField = "Heater";
+                graph4.balloonText = "Heater ON";
+                graph4.bullet = "none";
+                graph4.lineThickness = 2;
+                graph4.connect = false; 
+                chart.addGraph(graph4);
+
+                // Cooler graph
+                var graph5 = new AmCharts.AmGraph();
+                graph5.title = "Cooler";
+                graph5.valueField = "Cooler";
+                graph5.balloonText = "Cooler ON";
+                graph5.bullet = "none";
+                graph5.lineThickness = 2;
+                graph5.connect = false; 
+                chart.addGraph(graph5);
+         			
+         			 // Co2 graph
+                var graph6 = new AmCharts.AmGraph();
+                graph6.title = "Co2";
+                graph6.valueField = "Co2";
+                graph6.balloonText = "Co2 ON";
+                graph6.bullet = "none";
+                graph6.lineThickness = 2;
+                graph6.connect = false; 
+                chart.addGraph(graph6);
+                                
+                // Light graph
+                var graph7 = new AmCharts.AmGraph();
+                graph7.title = "Light";
+                graph7.valueField = "Light";
+                graph7.balloonText = "Light ON";
+                graph7.bullet = "none";
+                graph7.lineThickness = 2;
+                graph7.connect = false; 
+                chart.addGraph(graph7);
+                
+               // CURSOR
+               var chartCursor = new AmCharts.ChartCursor();
+               chartCursor.cursorAlpha = 0.1;
+               chartCursor.fullWidth = false;
+               chartCursor.zoomable = false;
+               chart.addChartCursor(chartCursor);
+
+               // SCROLLBAR
+               //var chartScrollbar = new AmCharts.ChartScrollbar();
+               //chart.addChartScrollbar(chartScrollbar);
+
+               // LEGEND
+               var legend = new AmCharts.AmLegend();
+               legend.marginLeft = 110;
+               legend.useGraphSettings = true;
+               chart.addLegend(legend);
+
+               // WRITE
+               chart.write("chartdiv");
+           });
+           
+           // this method is called when chart is first inited as we listen for "dataUpdated" event
+           function zoomChart() {
+               // different zoom methods can be used - zoomToIndexes, zoomToDates, zoomToCategoryValues
+               chart.zoomToIndexes(10, 20);
+           }           
+           /*
+            AmCharts.ready(function () {
+                // SERIAL CHART
+                chart = new AmCharts.AmSerialChart();
+                chart.pathToImages = "img/";
+                chart.dataProvider = chartData;
+                chart.categoryField = "DateTimes";
+                chart.startDuration = 0.2;
+                chart.balloon.color = "#BDBEBF";
+
+               
+                // AXES
+                // category
+                var categoryAxis = chart.categoryAxis;
+                categoryAxis.fillAlpha = 0.01;
+                categoryAxis.fillColor = "#FFFFFF";
+                categoryAxis.gridAlpha = 0.10;
+                categoryAxis.axisAlpha = 0;
+                categoryAxis.gridPosition = "start";
+                categoryAxis.position = "bottom";
+ 
+             
+                // value
+                var valueAxis = new AmCharts.ValueAxis();
+                valueAxis.tickLength = 0;
+                valueAxis.axisAlpha = 0;
+                valueAxis.gridAlpha = 0;
+                valueAxis.maximum = 40;
+                valueAxis.showFirstLabel = false;
+                valueAxis.showLastLabel = false;
+                chart.addValueAxis(valueAxis);
+                
+                // GRAPHS
+                // Temp graph						            		
+                var graph = new AmCharts.AmGraph();
+                graph.title = "Temp";
+                graph.valueField = "Temp";
+                graph.balloonText = "[[value]]도";
+                graph.bullet = "none";
+                graph.lineThickness = 3;
+                chart.addGraph(graph);
+
+                // PH graph
+                var graph = new AmCharts.AmGraph();
+                graph.title = "PH";
+                graph.valueField = "Ph";
+                graph.balloonText = "PH [[value]]";
+                graph.bullet = "none";
+                graph.lineThickness = 3;
+                chart.addGraph(graph);
+
+                // Heater graph
+                var graph = new AmCharts.AmGraph();
+                graph.title = "Heater";
+                graph.valueField = "Heater";
+                graph.balloonText = "Heater ON";
+                graph.bullet = "none";
+                graph.lineThickness = 3;
+                graph.connect = false; 
+                chart.addGraph(graph);
+
+                // Cooler graph
+                var graph = new AmCharts.AmGraph();
+                graph.title = "Cooler";
+                graph.valueField = "Cooler";
+                graph.balloonText = "Cooler ON";
+                graph.bullet = "none";
+                graph.lineThickness = 3;
+                graph.connect = false; 
+                chart.addGraph(graph);
+         			
+         			 // Co2 graph
+                var graph = new AmCharts.AmGraph();
+                graph.title = "Co2";
+                graph.valueField = "Co2";
+                graph.balloonText = "Co2 ON";
+                graph.bullet = "none";
+                graph.lineThickness = 3;
+                graph.connect = false; 
+                chart.addGraph(graph);
+                                
+                // Light graph
+                var graph = new AmCharts.AmGraph();
+                graph.title = "Light";
+                graph.valueField = "Light";
+                graph.balloonText = "Light ON";
+                graph.bullet = "none";
+                graph.lineThickness = 3;
+                graph.connect = false; 
+                chart.addGraph(graph);
+                
+      
+                       
+                // CURSOR
+                var chartCursor = new AmCharts.ChartCursor();
+                chartCursor.zoomable = false;
+                chart.addChartCursor(chartCursor);
+                
+                // SCROLLBAR
+                //var chartScrollbar = new AmCharts.ChartScrollbar();
+                //chart.addChartScrollbar(chartScrollbar);  
+                                                                
+                // LEGEND
+                var legend = new AmCharts.AmLegend();
+                legend.markerType = "bubble"; //"square", "circle", "line", "dashedLine", "triangleUp", "triangleDown", "bubble", "none".
+                legend.valueText = "[[description]]";
+                chart.addLegend(legend);
+
+                // WRITE
+                chart.write("chartdiv");
+            });
+           */
+        </script>
+    </head>
+    
+    <body>
+    		<div id="leaqua" align=center> 
+<?php
+// schYear, schMonth 를 받아오고 없음 오늘날짜로. 
+
+if ($date) {
+$tmp = explode('-',$date); 
+$schYear = $tmp[0];
+$schMonth = $tmp[1];
+$sch_Day  = $tmp[2];
+}
+if(empty($schYear)) $schYear = date("Y"); 
+if(empty($schMonth)) $schMonth = date("m"); 
+if(empty($sch_Day)) $sch_Day = date("d"); 
+
+
+// 해당년월의 처음 요일을 구한다. 
+$firstTime = strtotime($schYear . "-" . $schMonth . "-01"); 
+$firstWeek = date("w", $firstTime); 
+
+// 해당년월의 마지막 날을 구한다 
+for ($ld = 28; checkdate($schMonth,$ld,$schYear); $ld ++); 
+$lastDay = $ld - 1; 
+
+// 해당년월의 마지막 요일을 구한다. 
+$lastTime = strtotime($schYear . "-" . $schMonth . "-" . $lastDay); 
+$lastWeek = date("w", $lastTime); 
+
+// 배열에 날짜 데이터를 먼저 우겨넣는다. 
+$arrSCH = array(array(),array(),array(),array(),array(),array(),array()); 
+
+for($i = 0; $i < $firstWeek; $i ++) { // 해당월의 처음 요일이 되기 전 공백 추가. 
+    $arrSCH[$i][] = ""; 
+} 
+
+$maxRow = 0; 
+for($schDay = 1; $schDay <= $lastDay; $schDay ++) { 
+    $checkday = mktime(0, 0, 0, $schMonth, $schDay, $schYear); 
+    $week = date("w", $checkday); 
+    $arrSCH[$week][] = $schDay; 
+
+    if(count($arrSCH[$week]) > $maxRow) $maxRow = count($arrSCH[$week]); 
+} 
+
+?>
+
+<div class=title>
+ LeAqua Chart V1.3
+</div>
+
+<br>
+
+<?php
+
+$next_year = $schYear;
+$next_month = $schMonth + 1;
+if($next_month > 12) { $next_month = 1 ;  $next_year = $next_year + 1;}
+$prev_year = $schYear;
+$prev_month = $schMonth - 1;
+if($prev_month < 1) { $prev_month = 12 ;  $prev_year = $prev_year - 1;}
+
+if($next_month < 10) { $next_month = "0".$next_month; }
+if($prev_month < 10) { $prev_month = "0".$prev_month; }
+
+echo "<a class=main href=$PHP_SELF?date=$prev_year-$prev_month-01>◁ </a>&nbsp; <font class=ym> $schYear 년 $schMonth 월 </font>&nbsp; <a class=main href=$PHP_SELF?date=$next_year-$next_month-01>▷ </a>";
+echo "<table>"; 
+echo "<tr>";
+for($row = 0; $row < $maxRow; $row ++) { 
+    for($col = 0; $col < 7; $col ++) { 
+		if($arrSCH[$col][$row]) {
+        	$day = str_pad($arrSCH[$col][$row], 2, "0", STR_PAD_LEFT ); 
+		}
+		else {
+			$day =$arrSCH[$col][$row];
+		}
+
+		if($col == 6) $clss = "class=sat";
+		elseif ($col == 0) $clss = "class=sun";
+		else $clss = "class=main";
+			
+        if(!$day) $aday = "&nbsp;"; 
+		else if(date(d) < $day) {
+			//$aday= $day;
+			$aday= "<a $clss href=$PHP_SELF?date=$schYear-$schMonth-$day>$day</a>";
+		}
+		else {
+			$aday= "<a $clss href=$PHP_SELF?date=$schYear-$schMonth-$day>$day</a>";
+		}
+		echo "<td>$aday</td>";
+    } 
+} 
+echo "</tr>";
+echo "<tr height=5 class=a>";
+for($row = 0; $row < $maxRow; $row ++) { 
+    for($col = 0; $col < 7; $col ++) { 
+        $day = $arrSCH[$col][$row]; 
+        if(!$day) $day = "&nbsp;"; 
+		if($sch_Day == $day) echo "<td  height=5>▲";
+		else echo "<td>";
+		echo "</td>";
+    } 
+} 
+echo "</tr>";
+
+echo "</table>"; 
+
+?>
+    		</div>
+    		
+        <div id="chartdiv" style="width: 95%;height: 600px;"></div>
+    </body>
+
+</html>
