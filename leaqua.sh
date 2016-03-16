@@ -2,9 +2,6 @@
 
 DIRECTORY=/home/pi/leaqua
 
- # passwd 파일이 존재하는지 체크: 
- # if [ -f "/etc/passwd" ]; then
- 
 echo -e "\033[33m## APM 확인\033[0m"
 dpkg-query -W apache2 > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
