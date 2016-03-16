@@ -6,17 +6,17 @@ DIRECTORY=/home/pi/leaqua
  # if [ -f "/etc/passwd" ]; then
  
 echo -e "\033[33m## APM 확인\033[0m"
-dpkg-query -l apache2 > /dev/null 2>&1
+dpkg-query -W apache2 > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
     echo " 먼저 apache2 패키지를 설치해 주세요"
     exit 1    
 fi
-dpkg-query -l php5 > /dev/null 2>&1
+dpkg-query -W php5 > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
     echo " 먼저 php5 php5-fpm 패키지를 설치해 주세요"
     exit 1    
 fi
-dpkg-query -l mysql-server > /dev/null 2>&1
+dpkg-query -W mysql-server > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
     echo " 먼저 mysql-server mysql-client 패키지를 설치해 주세요"
     exit 1    
@@ -26,7 +26,7 @@ fi
 
 
 echo -e "\033[33m## git 패키지 설치확인\033[0m"
-dpkg-query -l git > /dev/null 2>&1
+dpkg-query -W git > /dev/null 2>&1
 if [ "$?" -eq 0 ]; then
     echo " 이미 git 패키지가 설치되어 있습니다"
 else
@@ -96,13 +96,13 @@ read -n 1 -p "아무키나 누르세요...."
 
 
 echo -e "\033[33m## Python 용 라이브러리 설치\033[0m"
-dpkg-query -l python-mysqldb > /dev/null 2>&1
+dpkg-query -W python-mysqldb > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
     echo " python-mysqldb 패키지를 설치합니다"
     sudo apt-get -y install python-mysqldb
 fi
 
-dpkg-query -l python-psutil > /dev/null 2>&1
+dpkg-query -W python-psutil > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
     echo " python-psutil 패키지를 설치합니다"
     sudo apt-get -y install python-psutil
@@ -113,7 +113,7 @@ read -n 1 -p "아무키나 누르세요...."
 
 
 echo -e "\033[33m## avrdude 설치\033[0m"
-dpkg-query -l avrdude > /dev/null 2>&1
+dpkg-query -W avrdude > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
     echo " avrdude 패키지를 설치합니다"
     wget http://project-downloads.drogon.net/gertboard/avrdude_5.10-4_armhf.deb 
@@ -126,13 +126,13 @@ read -n 1 -p "아무키나 누르세요...."
 
 
 echo -e "\033[33m## Arduino IDE 설치\033[0m"
-dpkg-query -l arduino > /dev/null 2>&1
+dpkg-query -W arduino > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
     echo " arduino 패키지를 설치합니다"
     sudo apt-get -y install arduino
 fi
 
-dpkg-query -l arduino-mk > /dev/null 2>&1
+dpkg-query -W arduino-mk > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
     echo " arduino-mk 패키지를 설치합니다"
     sudo apt-get -y install arduino-mk
@@ -193,13 +193,13 @@ fi
 
 
 echo -e "\033[33m## scons 설치\033[0m"
-dpkg-query -l python-serial > /dev/null 2>&1
+dpkg-query -W python-serial > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
     echo " python-serial 패키지를 설치합니다"
     sudo apt-get -y install python-serial
 fi
 
-dpkg-query -l scons > /dev/null 2>&1
+dpkg-query -W scons > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
     echo " scons 패키지를 설치합니다"
     sudo apt-get -y install scons
@@ -217,7 +217,7 @@ fi
 read -n 1 -p "아무키나 누르세요...."
 
 #echo -e "\033[33m## APM 설치\033[0m"
-#dpkg-query -l apache2 > /dev/null 2>&1
+#dpkg-query -W apache2 > /dev/null 2>&1
 #if [ "$?" -eq 0 ]; then
 #    echo ""
 #else
