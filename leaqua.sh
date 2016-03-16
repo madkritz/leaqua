@@ -52,7 +52,7 @@ read -n 1 -p "아무키나 누르세요...."
 
 
 echo -e "\033[33m## 자동 시간동기화 설치\033[0m"
-dpkg-query -l ntpdate > /dev/null 2>&1
+dpkg-query -W ntpdate > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
     echo " ntp 패키지를 설치합니다"
     sudo apt-get -y install ntpdate
