@@ -1,0 +1,710 @@
+<?php
+
+namespace lib;
+
+class Net_SSH2 {
+
+	function exec_noauth($command)
+	{
+		exec($command, $output);
+		return $output;
+	}
+	
+	function shell_exec_noauth($command)
+	{
+		return shell_exec($command);
+	}
+}
+
+$ssh = new Net_SSH2;
+
+
+class Uptime {
+
+		public static function uptime() {
+				global $ssh;
+				$uptime = $ssh->shell_exec_noauth("cat /proc/uptime");
+				$uptime = explode(" ", $uptime);
+				return self::readbleTime($uptime[0]);
+		}
+
+		protected static function readbleTime($seconds) {
+				$y = floor($seconds / 60 / 60 / 24 / 365);
+				$d = floor($seconds / 60 / 60 / 24) % 365;
+				$h = floor(($seconds / 3600) % 24);
+				$m = floor(($seconds / 60) % 60);
+				$s = $seconds % 60;
+
+				$string = '';
+
+				if ($y > 0) {
+						$yw = $y > 1 ? ' 년 ' : ' 년 ';
+						$string .= $y . $yw;
+				}
+
+				if ($d > 0) {
+						$dw = $d > 1 ? ' 일 ' : ' 일 ';
+						$string .= $d . $dw;
+				}
+
+				if ($h > 0) {
+						$hw = $h > 1 ? ' 시간 ' : ' 시간 ';
+						$string .= $h . $hw;
+				}
+
+				if ($m > 0) {
+						$mw = $m > 1 ? ' 분 ' : ' 분 ';
+						$string .= $m . $mw;
+				}
+
+				if ($s > 0) {
+						$sw = $s > 1 ? ' 초 ' : ' 초 ';
+						$string .= $s . $sw;
+				}
+
+				return preg_replace('/\s+/', ' ', $string);
+		}
+
+}
+
+class Memory {
+
+		/**
+		 * The number of line which will be shown in the popover
+		 */
+		public static $DETAIL_LINE_COUNT = 5;
+
+		public static function ram() {
+				global $ssh;
+
+				$result = array();
+
+				$out = $ssh->exec_noauth('free -mo');
+				preg_match_all('/\s+([0-9]+)/', $out[1], $matches);
+				list($total, $used, $free, $shared, $buffers, $cached) = $matches[1];
+
+				$ramDetails = $ssh->shell_exec_noauth('ps -e -o pmem,user,args --sort=-pmem | sed "/^ 0.0 /d" | head -' . self::$DETAIL_LINE_COUNT);
+
+				$result['percentage'] = round(($used - $buffers - $cached) / $total * 100);
+				if ($result['percentage'] >= '80')
+						$result['alert'] = 'warning';
+				else
+						$result['alert'] = 'success';
+
+				$result['free'] = $free + $buffers + $cached;
+				$result['used'] = $used - $buffers - $cached;
+				$result['total'] = $total;
+				$result['detail'] = $ramDetails;
+
+				return $result;
+		}
+
+		public static function swap() {
+				global $ssh;
+				$result = array();
+
+				$out = $ssh->exec_noauth('free -mo');
+				preg_match_all('/\s+([0-9]+)/', $out[2], $matches);
+				list($total, $used, $free) = $matches[1];
+
+				$result['percentage'] = round($used / $total * 100);
+				if ($result['percentage'] >= '80')
+						$result['alert'] = 'warning';
+				else
+						$result['alert'] = 'success';
+
+				$result['free'] = $free;
+				$result['used'] = $used;
+				$result['total'] = $total;
+
+				return $result;
+		}
+
+}
+
+
+class CPU {
+
+		/**
+		 * The number of line which will be shown in the popover
+		 */
+		public static $DETAIL_LINE_COUNT = 5;
+
+		public static function cpu() {
+
+				$result = array();
+
+				$getLoad = sys_getloadavg();
+				$cpuCurFreq = round(file_get_contents("/sys/devices/system/cpu/cpu0/cpufreq/scaling_cur_freq") / 1000) . "MHz";
+				$cpuMinFreq = round(file_get_contents("/sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq") / 1000) . "MHz";
+				$cpuMaxFreq = round(file_get_contents("/sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq") / 1000) . "MHz";
+				$cpuFreqGovernor = file_get_contents("/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor");
+
+				if ($getLoad[0] > 1)
+						$result['alert'] = 'danger';
+				else
+						$result['alert'] = 'success';
+
+				$result['loads'] = $getLoad[0];
+				$result['loads5'] = $getLoad[1];
+				$result['loads15'] = $getLoad[2];
+				$result['current'] = $cpuCurFreq;
+				$result['min'] = $cpuMinFreq;
+				$result['max'] = $cpuMaxFreq;
+				$result['governor'] = substr($cpuFreqGovernor, 0, -1);
+
+				return $result;
+		}
+
+		private static $MaxTemp = 85;
+
+		public static function heat() {
+				global $ssh;
+				$result = array();
+
+				$fh = fopen("/sys/class/thermal/thermal_zone0/temp", 'r');
+				$currenttemp = fgets($fh);
+				fclose($fh);
+
+				$cpuDetails = $ssh->shell_exec_noauth('ps -e -o pcpu,user,args --sort=-pcpu | sed "/^ 0.0 /d" | head -' . self::$DETAIL_LINE_COUNT);
+
+				$result['degrees'] = round($currenttemp / 1000);
+				$result['percentage'] = round($result['degrees'] / self::$MaxTemp * 100);
+
+				if ($result['percentage'] >= '80')
+						$result['alert'] = 'danger';
+				elseif ($result['percentage'] >= '60')
+						$result['alert'] = 'warning';
+				else
+						$result['alert'] = 'success';
+
+				$result['detail'] = $cpuDetails;
+
+				return $result;
+		}
+
+}
+
+class Storage {
+
+		public static function hdd() {
+				global $ssh;
+
+				$result = array();
+
+				$drivesarray = $ssh->exec_noauth('df -T | grep -vE "tmpfs|rootfs|Filesystem"');
+
+				for ($i = 0; $i < count($drivesarray); $i++) {
+						$drivesarray[$i] = preg_replace('!\s+!', ' ', $drivesarray[$i]);
+						preg_match_all('/\S+/', $drivesarray[$i], $drivedetails);
+						list($fs, $type, $size, $used, $available, $percentage, $mounted) = $drivedetails[0];
+
+						$result[$i]['name'] = $mounted;
+						$result[$i]['total'] = self::kConv($size);
+						$result[$i]['free'] = self::kConv($available);
+						$result[$i]['used'] = self::kConv($size - $available);
+						$result[$i]['format'] = $type;
+
+						$result[$i]['percentage'] = rtrim($percentage, '%');
+
+						if ($result[$i]['percentage'] > '80')
+								$result[$i]['alert'] = 'warning';
+						else
+								$result[$i]['alert'] = 'success';
+				}
+
+				return $result;
+		}
+
+		public static function kConv($kSize) {
+				$unit = array('K', 'M', 'G', 'T');
+				$i = 0;
+				$size = $kSize;
+				while ($i < 3 && $size > 1024) {
+						$i++;
+						$size = $size / 1024;
+				}
+				return round($size, 2) . $unit[$i];
+		}
+
+}
+
+class Network {
+
+		public static function connections() {
+				global $ssh;
+				$connections = $ssh->shell_exec_noauth("netstat -nta --inet | wc -l");
+				$connections--;
+
+				return array(
+						'connections' => substr($connections, 0, -1),
+						'alert' => ($connections >= 50 ? 'warning' : 'success')
+				);
+		}
+
+		public static function ethernet() {
+				global $ssh;
+				$data = $ssh->shell_exec_noauth("/sbin/ifconfig eth0 | grep RX\ bytes");
+				$data = str_ireplace("RX bytes:", "", $data);
+				$data = str_ireplace("TX bytes:", "", $data);
+				$data = trim($data);
+				$data = explode(" ", $data);
+
+				$rxRaw = $data[0] / 1024 / 1024;
+				$txRaw = $data[4] / 1024 / 1024;
+				$rx = round($rxRaw, 2);
+				$tx = round($txRaw, 2);
+
+				return array(
+						'up' => $tx,
+						'down' => $rx,
+						'total' => $rx + $tx
+				);
+		}
+
+}
+
+class Rbpi {
+
+		public static function distribution() {
+				global $ssh;
+				$distroTypeRaw = $ssh->shell_exec_noauth("cat /etc/*-release | grep PRETTY_NAME=");
+				$distroTypeRawEnd = str_ireplace('PRETTY_NAME="', '', $distroTypeRaw);
+				$distroTypeRawEnd = str_ireplace('"', '', $distroTypeRawEnd);
+
+				return $distroTypeRawEnd;
+		}
+
+		public static function kernel() {
+				global $ssh;
+				return $ssh->shell_exec_noauth("uname -mrs");
+		}
+
+		public static function firmware() {
+				global $ssh;
+				return $ssh->shell_exec_noauth("uname -v");
+		}
+
+		public static function hostname($full = false) {
+				global $ssh;
+				return $full ? $ssh->shell_exec_noauth("hostname -f") : gethostname();
+		}
+
+		public static function internalIp() {
+				global $ssh;
+				return $_SERVER['SERVER_ADDR'];
+		}
+
+		public static function externalIp() {
+				$ip = self::loadUrl('http://whatismyip.akamai.com');
+				if (filter_var($ip, FILTER_VALIDATE_IP) === false)
+						$ip = self::loadUrl('http://ipecho.net/plain');
+				if (filter_var($ip, FILTER_VALIDATE_IP) === false)
+						return 'Unavailable';
+				return $ip;
+		}
+
+		public static function webServer() {
+				return$_SERVER['SERVER_SOFTWARE'];
+		}
+
+		protected static function loadUrl($url) {
+				if (function_exists('curl_init')) {
+						$curl = curl_init();
+						curl_setopt($curl, CURLOPT_URL, $url);
+						curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+						$content = curl_exec($curl);
+						curl_close($curl);
+						return trim($content);
+				} elseif (function_exists('file_get_contents')) {
+						return trim(file_get_contents($url));
+				} else {
+						return false;
+				}
+		}
+
+}
+
+class Users {
+
+		public static function connected() {
+				global $ssh;
+
+				$result = array();
+
+				$dataRaw = $ssh->shell_exec_noauth("who --ips");
+				$dataRawDNS = $ssh->shell_exec_noauth("who --lookup");
+
+				//patch for arch linux - the "who" binary doesnt support the --ips flag
+				if (empty($dataRaw))
+						$dataRaw = $ssh->shell_exec_noauth("who");
+
+				foreach (explode("\n", $dataRawDNS) as $line) {
+						$line = preg_replace("/ +/", " ", $line);
+
+						if (strlen($line) > 0) {
+								$line = explode(" ", $line);
+								$temp[] = $line[5];
+						}
+				}
+
+				$i = 0;
+				foreach (explode("\n", $dataRaw) as $line) {
+						$line = preg_replace("/ +/", " ", $line);
+
+						if (strlen($line) > 0) {
+								$line = explode(" ", $line);
+
+								$result[] = array(
+										'user' => $line[0],
+										'ip' => $line[5],
+										'dns' => $temp[$i],
+										'date' => $line[2] . ' ' . $line[3],
+										'hour' => $line[4]
+								);
+						}
+						$i++;
+				}
+
+				return $result;
+		}
+
+}
+
+class Temp {
+
+		/**
+		 * The number of line which will be shown in the popover
+		 */
+		public static $DETAIL_LINE_COUNT = 5;
+
+		public static function temp() {
+				$result = array();
+
+				$temp_file = "/sys/bus/w1/devices/28-000004e8a0f3/w1_slave";
+				if (file_exists($temp_file)) {
+						$lines = file($temp_file);
+						$pos = strpos($lines[1], "t=");
+						$currenttemp = round(substr($lines[1], $pos + 2) / 1000, 1) . "℃";
+				} else {
+						$currenttemp = "N/A";
+				}
+				$result['alert'] = 'success';
+				$result['degrees'] = $currenttemp;
+
+				return $result;
+		}
+
+}
+
+$uptime = Uptime::uptime();
+$ram = Memory::ram();
+$cpu = CPU::cpu();
+$cpu_heat = CPU::heat();
+$hdd = Storage::hdd();
+$net_connections = Network::connections();
+$net_eth = Network::ethernet();
+$temp = Temp::temp();
+
+function icon_alert($alert) {
+		echo '<i class="icon-';
+		switch ($alert) {
+				case 'success':
+						echo 'ok';
+						break;
+				case 'warning':
+						echo 'warning-sign';
+						break;
+				default:
+						echo 'exclamation-sign';
+		}
+		echo '"></i>';
+}
+
+function shell_to_html_table_result($shellExecOutput) {
+		$shellExecOutput = preg_split('/[\r\n]+/', $shellExecOutput);
+
+		// remove double (or more) spaces for all items
+		foreach ($shellExecOutput as &$item) {
+				$item = preg_replace('/[[:blank:]]+/', ' ', $item);
+				$item = trim($item);
+		}
+
+		// remove empty lines
+		$shellExecOutput = array_filter($shellExecOutput);
+
+		// the first line contains titles
+		$columnCount = preg_match_all('/\s+/', $shellExecOutput[0]);
+		$shellExecOutput[0] = '<tr><th>' . preg_replace('/\s+/', '</th><th>', $shellExecOutput[0], $columnCount) . '</th></tr>';
+		$tableHead = $shellExecOutput[0];
+		unset($shellExecOutput[0]);
+
+		// others lines contains table lines
+		foreach ($shellExecOutput as &$item) {
+				$item = '<tr><td>' . preg_replace('/\s+/', '</td><td>', $item, $columnCount) . '</td></tr>';
+		}
+
+		// return the build table
+		return '<table class=\'table table-striped\'>'
+						. '<thead>' . $tableHead . '</thead>'
+						. '<tbody>' . implode($shellExecOutput) . '</tbody>'
+						. '</table>';
+}
+?>
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>LeAqua</title>
+	
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link href="/aqua/leaqua1282-114x114.png" sizes="114x114" rel="apple-touch-icon">
+
+	<script src="/aqua/js/jquery-1.9.1.min.js"></script>
+	<script src="/aqua/js/jquery.mobile-1.3.0.min.js"></script>
+ 
+	<link href="/aqua/css/bootstrap.min.css" rel="stylesheet" media="screen" />
+	<link href="/aqua/css/bootstrap-responsive.min.css" rel="stylesheet" />
+	<link href="/aqua/css/raspcontrol.css" rel="stylesheet" media="screen" />
+
+	<link href="/aqua/css/jquery.mobile-1.3.0.min.css" rel="stylesheet"  />
+	  
+    <style type="text/css" media="screen">
+  	.ui-li-left{float:right;width:70%;text-align:right;}
+  	.ui-li-center{float:center;text-align:center;}
+  	.ui-listview2{margin:10px;}
+  	.ui-block-dc,.ui-grid-ac{margin:0;padding:0;border:0;float:center;min-height:1px;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;-ms-box-sizing:border-box;box-sizing:border-box}
+		.ui-h-h1{font-size: 20px;font-weight: bold;}
+		.comment {
+
+			text-align:right;
+			font-weight:normal;
+			font-size: 13px;
+			color: #999;
+			margin-right: 30px;
+		}
+		.mintitle {
+			text-align:left;
+			font-weight:normal;
+			font-size: 12px;
+			color: #999;
+		}
+		.my-list label.ui-input-text  { vertical-align: top;  font-weight:normal; }
+		.my-list label.ui-input-text { display: inline-block;  width: 20%;  margin: 0 2% 0 0; }
+		.my-list input.ui-input-text,
+		.my-list textarea.ui-input-text,
+		.my-list .ui-input-search {  display: inline-block; float: left; width: 10%; }
+
+
+    div#about {
+    	padding: 100px 0px 40px;
+      text-shadow: rgba(0, 0, 0, 0.3) 0px -1px 0;
+      color: #999;
+      font-size: 13px;
+      text-align: center;
+      background: #222222;
+    }
+
+    div#about p {
+    	margin-bottom: 8px;
+    }
+    div#about a {
+    	color: #fff;
+			font-weight: bold;
+      text-decoration: none;
+    }
+
+		.ui-bar-a {
+		    background-image : url(img/zebra-g.jpg);
+		    background-repeat : repeat;
+		}
+
+		.ui-btn-corner-all {
+			-webkit-border-radius: 0.3em /*{global-radii-buttons}*/;
+			border-radius: 0.3em /*{global-radii-buttons}*/;
+		}
+		
+		.ui-corner-all {
+			-webkit-border-radius: 0.3em /*{global-radii-blocks}*/;
+			border-radius: 0.3em /*{global-radii-blocks}*/;
+		}
+
+
+  </style>
+</head>
+
+
+<body>
+<div data-role="page" id="main" data-theme="d" data-fullscreen="true">
+
+	<div data-role="header" data-theme="d"  data-position="inline">
+		<h1>LeAqua</h1>
+	</div><!-- /header -->
+
+	<ul data-role="listview" data-theme="d" class="ui-listview2"  data-inset="true">
+		<li>
+			<a  data-ajax="false" href="/aqua/" target="_blank"	>컨트롤러 웹앱</a>
+			<div class="comment"> Leaqua 컨트롤의 상태를 모니터링 하거나 설정하는 웹앱 입니다.... </div>
+		</li>
+		<li>
+			<a  data-ajax="false" href="/grboard2/blog">컨트롤러 블로그</a>
+			<div class="comment"> 컨트롤러에 설치 되어 있는 블로그로 게시판 대신 사용할 수 있따 (사용자 기록용 등으로 사용).... </div>
+		</li>
+		<li>
+			<a  data-ajax="false" href="/grboard2/board-test/list">컨트롤러 게시판</a>
+			<div class="comment"> 컨트롤러에 설치 되어 있는 게시판으로 블로그 대신 사용할 수 있다 (사용자 기록용 등으로 사용).... </div>
+		</li>
+		<li>
+			<a  data-ajax="false" href="http://leaqua.mulple.com">Leaqua 블로그</a>
+			<div class="comment"> Leaqua 개발자 블로그.... </div>
+		</li>
+		<li>
+			<a href="#about">About</a>
+		</li>
+	</ul>
+	
+	<ul data-role="listview" data-theme="d" class="ui-listview2"  data-inset="true">
+		
+		<li data-icon="info"> <a href="#"> 시스템 정보 </a> 
+			<div class="comment"> 라즈베리의 현재 상태정보.... </div>
+		</li>
+  <ul>
+			<div class="container details"  style="float:left;">
+			
+					<table>
+							<tr id="check-system">
+									<td class="check"><i class="icon-cog"></i> 시스템</td>
+									<td class="icon"></td>
+									<td class="infos">
+											호스트이름: <span class="text-info"><?php echo Rbpi::hostname(true); ?></span>
+											<br />운영체제: <span class="text-info"><?php echo Rbpi::distribution(); ?></span>
+											<br />커널: <?php echo Rbpi::kernel(); ?>
+											<br />펌웨어: <?php echo Rbpi::firmware(); ?>
+									</td>
+							</tr>
+			
+							<tr id="check-uptime">
+									<td class="check"><i class="icon-time"></i> 작동시간</td>
+									<td class="icon"></td>
+									<td class="infos"><?php echo $uptime; ?></td>
+							</tr>
+			
+							<tr id="check-ram">
+									<td class="check"><i class="icon-asterisk"></i> 램</td>
+									<td class="icon"><?php echo icon_alert($ram['alert']); ?></td>
+									<td class="infos">
+											<div class="progress" id="popover-ram">
+													<div class="bar bar-<?php echo $ram['alert']; ?>" style="width: <?php echo $ram['percentage']; ?>%;"><?php echo $ram['percentage']; ?>%</div>
+											</div>
+											<div id="popover-ram-head" class="hide">RAM 사용 순위</div>
+											<div id="popover-ram-body" class="hide"><?php echo shell_to_html_table_result($ram['detail']); ?></div>
+											남은용량: <span class="text-success"><?php echo $ram['free']; ?>Mb</span>  &middot; 사용용량: <span class="text-warning"><?php echo $ram['used']; ?>Mb</span> &middot; 전체용량: <?php echo $ram['total']; ?>Mb
+									</td>
+							</tr>
+					
+							<tr id="check-cpu">
+									<td class="check"><i class="icon-tasks"></i> CPU 정보</td>
+									<td class="icon"><?php echo icon_alert($cpu['alert']); ?></td>
+									<td class="infos">
+											<span class="text-info"><?php echo $cpu['current']; ?></span>로 작동하고 있습니다. (최소: <?php echo $cpu['min']; ?>  &middot;  최대: <?php echo $cpu['max']; ?>)
+											<br />작동모드: <strong><?php echo $cpu['governor']; ?></strong>
+											<br />부하: <?php echo $cpu['loads']; ?> [1분 동안] &middot; <?php echo $cpu['loads5']; ?> [5분 동안] &middot; <?php echo $cpu['loads15']; ?> [15분 동안]
+									</td>
+							</tr>
+			
+							<tr id="check-cpu-heat">
+									<!--<td class="check"><i class="icon-fire"></i> CPU</td>-->
+									<td></td>
+									<td class="icon"><?php echo icon_alert($cpu_heat['alert']); ?></td>
+									<td class="infos">
+											<div class="progress" id="popover-cpu">
+													<div class="bar bar-<?php echo $cpu_heat['alert']; ?>" style="width: <?php echo $cpu_heat['percentage']; ?>%;"><?php echo $cpu_heat['percentage']; ?>%</div>
+											</div>
+											<div id="popover-cpu-head" class="hide">CPU 사용 순위</div>
+											<div id="popover-cpu-body" class="hide"><?php echo shell_to_html_table_result($cpu_heat['detail']); ?></div>
+											온도: <span class="text-info"><?php echo $cpu_heat['degrees']; ?>℃</span>
+									</td>
+							</tr>
+			
+							<tr class="storage" id="check-storage">
+									<td class="check" rowspan="<?php echo sizeof($hdd); ?>"><i class="icon-hdd"></i> 저장공간</td>
+									<?php
+									for ($i = 0; $i < sizeof($hdd); $i++) {
+											echo '<td class="icon" style="padding-left: 10px;">', icon_alert($hdd[$i]['alert']), '</td>
+									<td class="infos">
+										<i class="icon-folder-open"></i> ', $hdd[$i]['name'], '
+										<div class="progress">
+											<div class="bar bar-', $hdd[$i]['alert'], '" style="width: ', $hdd[$i]['percentage'], '%;">', $hdd[$i]['percentage'], '%</div>
+										</div>
+										남은용량: <span class="text-success">', $hdd[$i]['free'], 'b</span> &middot; 사용용량: <span class="text-warning">', $hdd[$i]['used'], 'b</span> &middot; 전체: ', $hdd[$i]['total'], 'b &middot; 포맷: ', $hdd[$i]['format'], '
+									</td>
+								</tr>
+								', ($i == sizeof($hdd) - 1) ? null : '<tr class="storage">';
+									}
+									?>
+			
+							<tr id="check-network">
+									<td class="check"><i class="icon-globe"></i> 네트워크</td>
+									<td class="icon"><?php echo icon_alert($net_connections['alert']); ?></td>
+									<td class="infos">
+											IP: <span class="text-info"><?php echo Rbpi::internalIp(); ?></span> [내부] &middot;
+											<span class="text-info"><?php echo Rbpi::externalIp(); ?></span> [외부]
+											<br />수신: <strong><?php echo $net_eth['down']; ?>Mb</strong> &middot; 발신: <strong><?php echo $net_eth['up']; ?>Mb</strong> &middot; 전체: <?php echo $net_eth['total']; ?>Mb
+											<br />연결수: <?php echo $net_connections['connections']; ?>
+									</td>
+							</tr>
+			
+							<?php
+							if ($temp['degrees'] != "N/A") {
+									?>
+									<tr id="check-temp">
+											<td class="check"><i class="icon-fire"></i> DS18B20</td>
+											<td class="icon"><?php echo icon_alert($temp['alert']); ?></td>
+											<td class="infos">
+													<span class="text-info"><?php echo $temp['degrees']; ?></span>
+											</td>
+									</tr>
+									<?php
+							}
+							?>
+			
+					</table>
+			</div>
+
+</div><!-- /page -->
+
+<!-- Start of Setup page -->
+<div data-role="page" id="about" data-theme="a" align=center>
+		<p><img src="/aqua/leaqua.png" /></p>
+		<p style="font-size:14pt;"><strong>LeAqua Mobile</strong></p>
+		<p>Version 1.6<br><br>
+		<a href="http://kritz.mulple.com">By Kritz</a></p>
+		<p><em>Aquarium Controll, Log System 
+			<br/><br/> powered by 
+			<br/> Raspberry Pi, Arudino 
+			<br/> Apache , PHP , Mysql , jQuery mobile
+			
+		  </em>
+		</p>
+		<div data-role="controlgroup" data-type="horizontal">    
+			<a href="#main" data-role="button">  Close  </a>
+		</div>
+</div>
+
+
+	
+    <footer>
+        <div class="container">
+            <p>Powered by <a href="http://leaqua.mulple.com">Kritz</a>.</p>
+        </div>
+    </footer>
+    
+	<script src="/aqua/js/bootstrap.min.js"></script>
+	<script src="/aqua/js/details.js"></script>
+    
+</body>
+
+</html>
+
+

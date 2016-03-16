@@ -25,7 +25,7 @@ $set_temp_call_act = $_POST['set_temp_call_act'];
 //echo "<script> alert('$lights'); </script>";
 
 
-// CPU °íÀ¯ ID¸¦ °¡Á®¿È
+// CPU ê³ ìœ  IDë¥¼ ê°€ì ¸ì˜´
 $handle = fopen("/proc/cpuinfo", "r");
 $contents = fread($handle, 1024);
 fclose($handle);
@@ -54,15 +54,15 @@ if (($mode == "save_value") or ($mode == "set_light")) {
 
 		fputs($file,"<?xml version=\"1.0\"?>\r\n"); 
 		fputs($file,"<note>\r\n");
-		fputs($file,"    <light>$switch_light</light>\r\n");	//Á¶¸í on/off	
-		fputs($file,"    <temp_calibration>$set_temp_call</temp_calibration>\r\n"); //¿Âµµº¸Á¤
-		fputs($file,"    <temp_max>$set_max_temp</temp_max>\r\n"); //ÃÖ´ë¿Âµµ
-		fputs($file,"    <temp_min>$set_min_temp</temp_min>\r\n"); //ÃÖÀú¿Âµµ	
-		fputs($file,"    <ph_min>$set_min_ph</ph_min>\r\n"); //ÃÖÀúPH
-		fputs($file,"    <light_starttime>$set_light_startv</light_starttime>\r\n"); //Á¶¸í½ÃÀÛ½Ã°£
-		fputs($file,"    <light_endtime>$set_light_endv</light_endtime>\r\n"); //Á¶¸íÁ¾·á½Ã°£
-		fputs($file,"    <co2_starttime>$set_co2_startv</co2_starttime>\r\n"); //co2½ÃÀÛ½Ã°£	
-		fputs($file,"    <co2_endtime>$set_co2_endv</co2_endtime>\r\n"); //co2Á¾·á½Ã°£
+		fputs($file,"    <light>$switch_light</light>\r\n");	//ì¡°ëª… on/off	
+		fputs($file,"    <temp_calibration>$set_temp_call</temp_calibration>\r\n"); //ì˜¨ë„ë³´ì •
+		fputs($file,"    <temp_max>$set_max_temp</temp_max>\r\n"); //ìµœëŒ€ì˜¨ë„
+		fputs($file,"    <temp_min>$set_min_temp</temp_min>\r\n"); //ìµœì €ì˜¨ë„	
+		fputs($file,"    <ph_min>$set_min_ph</ph_min>\r\n"); //ìµœì €PH
+		fputs($file,"    <light_starttime>$set_light_startv</light_starttime>\r\n"); //ì¡°ëª…ì‹œì‘ì‹œê°„
+		fputs($file,"    <light_endtime>$set_light_endv</light_endtime>\r\n"); //ì¡°ëª…ì¢…ë£Œì‹œê°„
+		fputs($file,"    <co2_starttime>$set_co2_startv</co2_starttime>\r\n"); //co2ì‹œì‘ì‹œê°„	
+		fputs($file,"    <co2_endtime>$set_co2_endv</co2_endtime>\r\n"); //co2ì¢…ë£Œì‹œê°„
 		fputs($file,"    <time>$datetime</time>\r\n");
 		fputs($file,"    <mode>$mode</mode>\r\n");		
 		fputs($file,"</note>\r\n");
@@ -77,7 +77,7 @@ else if ($mode == "get_value") {
 
 }
 
-//Á¶¸í on/off		¿Âµµº¸Á¤		ÃÖ´ë¿Âµµ		ÃÖÀú¿Âµµ		ÃÖÀúPH		Á¶¸í½ÃÀÛ½Ã°£		Á¶¸íÁ¾·á½Ã°£		co2½ÃÀÛ½Ã°£		co2Á¾·á½Ã°£		¼³Á¤°ªÈ£Ãâ
+//ì¡°ëª… on/off		ì˜¨ë„ë³´ì •		ìµœëŒ€ì˜¨ë„		ìµœì €ì˜¨ë„		ìµœì €PH		ì¡°ëª…ì‹œì‘ì‹œê°„		ì¡°ëª…ì¢…ë£Œì‹œê°„		co2ì‹œì‘ì‹œê°„		co2ì¢…ë£Œì‹œê°„		ì„¤ì •ê°’í˜¸ì¶œ
 //
 
 echo "ok";
