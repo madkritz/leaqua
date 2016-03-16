@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 # touchv6
-# LeAqua v2.0b 5/12/14
+# LeAqua v2.01 3/16/16
 # install first "sudo apt-get install python-psutil"
 
 import pygame, sys, os
