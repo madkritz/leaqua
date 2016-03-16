@@ -11,12 +11,12 @@ if [ "$?" -ne 0 ]; then
     echo " 먼저 apache2 패키지를 설치해 주세요"
     exit 1    
 fi
-dpkg-query -W php5 > /dev/null 2>&1
+dpkg-query -W php5 php5-fpm > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
     echo " 먼저 php5 php5-fpm 패키지를 설치해 주세요"
     exit 1    
 fi
-dpkg-query -W mysql-server > /dev/null 2>&1
+dpkg-query -W mysql-server mysql-client > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
     echo " 먼저 mysql-server mysql-client 패키지를 설치해 주세요"
     exit 1    
