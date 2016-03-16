@@ -5,6 +5,7 @@ Leaqua 설치 프로그램입니다
 이 문서와 해당 소스코드는 업데이트 작업중이므로 정상적으로 작동하지 않습니다.
 
 1 Raspbian Jessie Lite 이미지를 받아서 SD카드에 설치
+
 2 sudo raspi-config 실행하여 기본 설정
 
     언어설정
@@ -43,9 +44,13 @@ Leaqua 설치 프로그램입니다
     raspi-config 종료하면 리부팅하면서 파일시스템확장됨
 
 3 apache2 , php , mysql 을 설치
+
 4 wget https://raw.githubusercontent.com/madkritz/leaqua/master/leaqua.sh
+
 5 chmod +x leaqua.sh
+
 6 sudo ./leaqua.sh
+
 
 
 
