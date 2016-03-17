@@ -132,9 +132,9 @@ else
 fi
 
 
-sudo sed -i 's/__DB_PASSWORD__/$leaquapass/g' /home/pi/www/access.class.php
-sudo sed -i 's/__DB_PASSWORD__/$leaquapass/g' /home/pi/www/index.html
-sudo sed -i 's/__DB_PASSWORD__/$leaquapass/g' /home/pi/www/chart.html
+sudo sed -i 's/__DB_PASSWORD__/$leaquapass/g' /home/pi/leaqua/www/access.class.php
+sudo sed -i 's/__DB_PASSWORD__/$leaquapass/g' /home/pi/leaqua/www/index.html
+sudo sed -i 's/__DB_PASSWORD__/$leaquapass/g' /home/pi/leaqua/www/chart.html
 
 read -n 1 -p "아무키나 누르세요...."
 
