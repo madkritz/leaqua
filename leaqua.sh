@@ -82,9 +82,9 @@ else
     sudo mount -a
 fi
 
-if [ ! -h "/var/www/http/tmp" ]; then
-    sudo ln -s /var/ramdisk /var/www/http/tmp
-    sudo chmod 777 /var/www/http/tmp
+if [ ! -h "/var/www/html/tmp" ]; then
+    sudo ln -s /var/ramdisk /var/www/html/tmp
+    sudo chmod 777 /var/www/html/tmp
 fi    
 read -n 1 -p "아무키나 누르세요...."
 
