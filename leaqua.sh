@@ -135,6 +135,7 @@ fi
 sudo sed -i 's/__DB_PASSWORD__/$leaquapass/g' /home/pi/leaqua/www/access.class.php
 sudo sed -i 's/__DB_PASSWORD__/$leaquapass/g' /home/pi/leaqua/www/index.html
 sudo sed -i 's/__DB_PASSWORD__/$leaquapass/g' /home/pi/leaqua/www/chart.html
+sudo cp -r /home/pi/leaqua/www/* /var/www/html/
 
 read -n 1 -p "아무키나 누르세요...."
 
@@ -258,11 +259,28 @@ else
     mkdir sketch
     cd sketch
     git clone https://code.google.com/r/kylecgordon-arscons/
-    cd /home/pi/leaqua
+
     cp /home/pi/leaqua/sketch/kylecgordon-arscons/SConstruct /home/pi/leaqua/arduino/SConstruct
+    sudo cp -r /home/pi/leaqua/leaqua_arduino/libraries/Time /usr/share/arduino/libraries/
+    #아래 두줄은 컴파일 시 WProgram.h 관련 에러 때문에 제거 ㅠㅜ
+    sudo rm -r /usr/share/arduino/libraries/Robot_Control
+    sudo rm -r /usr/share/arduino/libraries/Robot_Motor
+    cd /home/pi/leaqua/leaqua_arduino
+    #소스코드 컴파일 해서 펌웨어 업로드
+    sudo scons ARDUINO_PORT=/dev/ttyS0 ARDUINO_BOARD=leaqua ARDUINO_VER=1.0.1 ARDUINO_HOME=/usr/share/arduino upload
+    cd /home/pi/leaqua
 fi
 read -n 1 -p "아무키나 누르세요...."
 
+
+echo -e "\033[33m## 터치스크린 설치\033[0m"
+#/boot/config.txt 에 dtoverlay=hy28b, rotate=90, speed=48000000, fps=20 추가
+#/boot/cmdline.txt 는 dwc_otg.lpm_enable=0   root=/dev/mmcblk0p2 rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait fbcon=map:10 fbcon=font:ProFont6x11
+
+#터치스크린 보정용 프로그램 설치
+#sudo apt-get install libts-bin evtest xinput python-dev python-pip
+#pip install evdev
+#sudo TSLIB_FBDEVICE=/dev/fb1 TSLIB_TSDEVICE=/dev/input/event0 ts_calibrate
 
 
 ## 사용자 이름을 받아들이고 인사를 출력한다
