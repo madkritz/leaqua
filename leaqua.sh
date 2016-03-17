@@ -254,11 +254,11 @@ fi
 if [ -d "sketch" ]; then
     echo "sketch 디렉터리가 이미 존재합니다"
 else
-    cd /home/pi/
+    cd /home/pi/leaqua
     mkdir sketch
     cd sketch
     git clone https://code.google.com/r/kylecgordon-arscons/
-    cd /home/pi/
+    cd /home/pi/leaqua
     cp /home/pi/leaqua/sketch/kylecgordon-arscons/SConstruct /home/pi/leaqua/arduino/SConstruct
 fi
 read -n 1 -p "아무키나 누르세요...."
