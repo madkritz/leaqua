@@ -1,5 +1,4 @@
 <?php
-//$loggedIn = (isset($_COOKIE['loggedins']) && $_COOKIE['loggedins'] == 'true')?true:false;
 
 @extract($HTTP_GET_VARS);
 @extract($HTTP_POST_VARS);

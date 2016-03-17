@@ -60,12 +60,12 @@ class flexibleAccess{
    * The database password
    * var string
    */
-  var $dbPass = '123wasd';
+  var $dbPass = '__DB_PASSWORD__';
   /**
    * The database table that holds all the information
    * var string
    */
-  var $dbTable  = 'users';
+  var $dbTable  = 'leaqua_users';
   /**
    * The session variable ($_SESSION[$sessionVariable]) which will hold the data while the user is logged on
    * var string

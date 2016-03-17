@@ -92,6 +92,55 @@ read -n 1 -p "아무키나 누르세요...."
 
 
 
+echo -e "\033[33m## Webapp 설정\033[0m"
+cd /var/www/html
+git clone https://github.com/acidb/mobiscroll/
+git clone https://github.com/amcharts/amcharts3
+cd $DIRECTORY
+
+echo -n "MYSQL root 암호를 입력하세요: "
+stty -echo
+read pass
+echo ""
+echo "" 
+stty echo
+
+echo -n "MYSQL에 생성하는 Leaqua DB 암호를 입력하세요: "
+stty -echo
+read leaquapass
+echo ""
+echo ""
+stty echo
+
+echo -n "MYSQL에 생성하는 Leaqua DB 암호 확인: "
+stty -echo
+read leaquapassconfirm
+echo ""
+echo ""
+stty echo
+
+if [ "$leaquapass" == "$leaquapassconfirm" ]; then
+    touch /tmp/mysql_dbusersetup_temp 
+    echo "create database IF NOT EXISTS leaqua;" >> /tmp/mysql_dbusersetup_temp 
+    echo "GRANT all privileges on leaqua.* TO leaqua@localhost IDENTIFIED BY '$leaquapass';" >> /tmp/mysql_dbusersetup_temp  
+    mysql -u root -p$pass mysql < /tmp/mysql_dbusersetup_temp 
+    rm -f /tmp/mysql_dbusersetup_temp
+    mysql -u leaqua -p$leaquapass leaqua < leaqua.sql
+else
+    echo -n "암호가 다릅니다"
+    exit
+fi
+
+
+sudo sed -i 's/__DB_PASSWORD__/$leaquapass/g' /home/pi/www/access.class.php
+sudo sed -i 's/__DB_PASSWORD__/$leaquapass/g' /home/pi/www/index.html
+sudo sed -i 's/__DB_PASSWORD__/$leaquapass/g' /home/pi/www/chart.html
+
+read -n 1 -p "아무키나 누르세요...."
+
+
+
+
 echo -e "\033[33m## Python 용 라이브러리 설치\033[0m"
 dpkg-query -W python-mysqldb > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
@@ -209,21 +258,10 @@ else
     mkdir sketch
     cd sketch
     git clone https://code.google.com/r/kylecgordon-arscons/
-    cd /home/pi/    
+    cd /home/pi/
+    cp /home/pi/leaqua/sketch/kylecgordon-arscons/SConstruct /home/pi/leaqua/arduino/SConstruct
 fi
 read -n 1 -p "아무키나 누르세요...."
-
-#echo -e "\033[33m## APM 설치\033[0m"
-#dpkg-query -W apache2 > /dev/null 2>&1
-#if [ "$?" -eq 0 ]; then
-#    echo ""
-#else
-#    echo " apache2 패키지를 설치합니다"
-#    sudo apt-get -y install apache2
-#    sudo a2enmod rewrite
-#    
-#fi
-
 
 
 

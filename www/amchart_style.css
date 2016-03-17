@@ -1,0 +1,70 @@
+body { font-family: Tahoma, Arial, Verdana; font-size: 12px; 	
+color: black; 
+/*  background-image: none;
+  background: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#BDBEBF), to(#7C7D7E));*/\
+  
+}
+
+#leaqua {
+  -webkit-text-size-adjust: none;
+  -webkit-user-select: none;
+  user-select: none;
+    -webkit-border-radius: 0;
+  border-radius: 0;
+  //font-family: "Helvetica Neue", Helvetica;
+  //position: absolute;
+  //right: 0;
+  //top: 0;
+  //left: 0;
+  //bottom: 0;
+}
+
+#leaqua .ym {font-family: Tahoma, Arial, Verdana; font-size: 16pt;}
+#leaqua .title {
+	font-family: Tahoma, Arial, Verdana; 
+	font-size: 20pt;
+	font-weight: bold;
+	align: center;
+	}
+#leaqua .toolbar {
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.4) 0 1px 6px;
+  box-shadow: rgba(0, 0, 0, 0.4) 0 1px 6px;
+  border-bottom: 1px solid black;
+  z-index: 10;
+  position: relative;
+  padding: 10px;
+  height: 44px;
+}
+
+#leaqua .toolbar > h1 {
+  position: absolute;
+  overflow: hidden;
+  left: 50%;
+  bottom: 9px;
+  margin: 1px 0 0 -75px;
+  width: 150px;
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 1.3em;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #161717;
+  text-shadow: #161717 0 -1px 0;
+}
+
+#leaqua A {font-family: Tahoma, Arial, Verdana; font-size: 12pt;}
+#leaqua A.main:link    {color:#756E6D;text-decoration:none;}
+#leaqua A.main:visited {color:#756E6D;text-decoration:none;}
+#leaqua A.main:active  {color:#756E6D;text-decoration:none;}
+#leaqua A.main:hover  {color:#8C8C8C;text-decoration:none;}
+#leaqua A.sat:link    {color:#92ABE7;text-decoration:none;}
+#leaqua A.sat:visited {color:#92ABE7;text-decoration:none;}
+#leaqua A.sat:active  {color:#92ABE7;text-decoration:none;}
+#leaqua A.sat:hover  {color:#8C8C8C;text-decoration:none;}
+#leaqua A.sun:link    {color:#FF0033;text-decoration:none;}
+#leaqua A.sun:visited {color:#FF0033;text-decoration:none;}
+#leaqua A.sun:active  {color:#FF0033;text-decoration:none;}
+#leaqua A.sun:hover  {color:#8C8C8C;text-decoration:none;}
