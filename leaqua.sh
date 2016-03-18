@@ -2,6 +2,8 @@
 
 DIRECTORY=/home/pi/leaqua
 
+sudo apt-get update 
+
 echo -e "\033[33m## APM 확인\033[0m"
 dpkg-query -W apache2 > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
@@ -21,12 +23,12 @@ fi
 dpkg-query -W php5-common php5 libapache2-mod-php5 > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
     echo " php5 패키지를 설치합니다"
-    sudo apt-get install php5-common php5 libapache2-mod-php5
+    sudo apt-get -y install php5-common php5 libapache2-mod-php5
 fi
 dpkg-query -W mysql-server mysql-client > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
     echo " mysql 패키지를 설치합니다"
-    sudo apt-get install mysql-server mysql-client
+    sudo apt-get -y install mysql-server mysql-client
 fi
 
 
@@ -331,7 +333,7 @@ echo "SUBSYSTEM==\"input\", ATTRS{name}==\"ADS7846 Touchscreen\", ENV{DEVNAME}==
 sudo cp 95-ads7846.rules /etc/udev/rules.d/95-ads7846.rules
 rm 95-ads7846.rules
 cd /home/pi/leaqua
-
+fi
 
 
 
@@ -374,6 +376,4 @@ apt-get -y --force-yes install libsdl1.2debian/wheezy
 #    echo "You did not tell me your name!"
 #    exit
 #fi
-echo "설치가 완료되었습니다!" 
-
-
+echo "설치가 완료되었습니다!"
