@@ -16,7 +16,7 @@ $start_time = get_time();
 if ( $_GET['logout'] == 1 ) 
 	$user->logout(htmlspecialchars($_SERVER['PHP_SELF']));
 	
-//$loggedIn = (isset($_COOKIE['loggedins']) && $_COOKIE['loggedins'] == 'true')?true:false;
+
 $loggedIn = ($user->is_loaded())?true:false;
 
 if (!$loggedIn)
@@ -618,11 +618,10 @@ if ($coltext) {
     	<a target="_blank" href="chart.html">그래프 보기</a>
     </li>
 
-<?php if($useIE == false) { ?>
     <li>
     	<a href="#cam">캠보기</a>
     </li>    
-<?php } ?>
+
 
 <?php if($loggedIn) { ?>
     <li>
@@ -640,7 +639,8 @@ if ($coltext) {
 			    			<input id="log" name="uname" value="" placeholder="User ID" type="text" data-mini="true" />
 			    			<label for="pwd">암호 </label>
 			    			<input id="pwd" name="pwd" value="" placeholder="Password" type="password" data-mini="true" />
-								<input id="submit1" type="submit" data-role="button" data-icon="check"  data-mini="true" value="확인" />
+                            <input type="hidden" name="remember" value="1" />
+							<input id="submit1" type="submit" data-role="button" data-icon="check"  data-mini="true" value="확인" />
 						</div>
 					</form>
 				</div>
@@ -914,7 +914,7 @@ if ($coltext) {
 <?PHP
 $end = get_time();
 $time = $end - $start_time;
-echo '<br/>'.$time.'초 걸림';
+echo '<br/><!--'.$time.'초 걸림-->';
 ?>
 </body>
 </html>

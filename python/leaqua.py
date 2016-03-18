@@ -27,7 +27,7 @@ print eventX
 
 os.environ["SDL_FBDEV"] = "/dev/fb1"
 os.environ["SDL_MOUSEDRV"] = "TSLIB"
-os.environ["SDL_MOUSEDEV"] = "/dev/input/event1"
+os.environ["SDL_MOUSEDEV"] = eventX
 
 # Init pygame and screen
 print "Initting..."
@@ -95,22 +95,22 @@ background.fill(WHITE)
 
 # 스프라이트를 적재하라:
 # 다음으로부터 이미지를 가져오라: ./images/sprite1.gif
-sprite_file = os.path.join('/home/pi/leaqua/', 'leaqua_base.png')
+sprite_file = os.path.join('/home/pi/leaqua/python/', 'leaqua_base.png')
 sprite = pygame.image.load(sprite_file).convert()
-config_icon = pygame.image.load(os.path.join('/home/pi/leaqua/icons/', 'config_icon.png'))
-cloud_on_icon = pygame.image.load(os.path.join('/home/pi/leaqua/icons/', 'cloudyes_icon.png'))
-cloud_off_icon = pygame.image.load(os.path.join('/home/pi/leaqua/icons/', 'cloudno_icon.png'))
-cooler_icon = pygame.image.load(os.path.join('/home/pi/leaqua/icons/', 'cooler_icon.png'))
-heater_icon = pygame.image.load(os.path.join('/home/pi/leaqua/icons/', 'heater_icon.png'))
-co2_icon = pygame.image.load(os.path.join('/home/pi/leaqua/icons/', 'gas_icon.png'))
-light_icon = pygame.image.load(os.path.join('/home/pi/leaqua/icons/', 'light_icon.png'))
-cooler_off_icon = pygame.image.load(os.path.join('/home/pi/leaqua/icons/', 'cooler_off_icon.png'))
-heater_off_icon = pygame.image.load(os.path.join('/home/pi/leaqua/icons/', 'heater_off_icon.png'))
-co2_off_icon = pygame.image.load(os.path.join('/home/pi/leaqua/icons/', 'gas_off_icon.png'))
-light_off_icon = pygame.image.load(os.path.join('/home/pi/leaqua/icons/', 'light_off_icon.png'))
-info_icon = pygame.image.load(os.path.join('/home/pi/leaqua/icons/', 'info_icon.png'))
-accept_icon = pygame.image.load(os.path.join('/home/pi/leaqua/icons/', 'accept_icon.png'))
-cancel_icon = pygame.image.load(os.path.join('/home/pi/leaqua/icons/', 'cancel_icon.png'))
+config_icon = pygame.image.load(os.path.join('/home/pi/leaqua/python/icons/', 'config_icon.png'))
+cloud_on_icon = pygame.image.load(os.path.join('/home/pi/leaqua/python/icons/', 'cloudyes_icon.png'))
+cloud_off_icon = pygame.image.load(os.path.join('/home/pi/leaqua/python/icons/', 'cloudno_icon.png'))
+cooler_icon = pygame.image.load(os.path.join('/home/pi/leaqua/python/icons/', 'cooler_icon.png'))
+heater_icon = pygame.image.load(os.path.join('/home/pi/leaqua/python/icons/', 'heater_icon.png'))
+co2_icon = pygame.image.load(os.path.join('/home/pi/leaqua/python/icons/', 'gas_icon.png'))
+light_icon = pygame.image.load(os.path.join('/home/pi/leaqua/python/icons/', 'light_icon.png'))
+cooler_off_icon = pygame.image.load(os.path.join('/home/pi/leaqua/python/icons/', 'cooler_off_icon.png'))
+heater_off_icon = pygame.image.load(os.path.join('/home/pi/leaqua/python/icons/', 'heater_off_icon.png'))
+co2_off_icon = pygame.image.load(os.path.join('/home/pi/leaqua/python/icons/', 'gas_off_icon.png'))
+light_off_icon = pygame.image.load(os.path.join('/home/pi/leaqua/python/icons/', 'light_off_icon.png'))
+info_icon = pygame.image.load(os.path.join('/home/pi/leaqua/python/icons/', 'info_icon.png'))
+accept_icon = pygame.image.load(os.path.join('/home/pi/leaqua/python/icons/', 'accept_icon.png'))
+cancel_icon = pygame.image.load(os.path.join('/home/pi/leaqua/python/icons/', 'cancel_icon.png'))
 
 
 # 스프라이트의 초기 위치를 획득하라, 
@@ -152,7 +152,7 @@ light_icon_position.left = 227
 
 # 폰트 설정 
 #nanum = r'/home/pi/leaqua/Nanum.ttf'
-digital = r'/home/pi/leaqua/digital-7.ttf'
+digital = r'/home/pi/leaqua/python/digital-7.ttf'
 #font = pygame.font.Font(nanum, 14)
 font1 = pygame.font.Font(digital, 16)
 font2 = pygame.font.Font(digital, 24)
@@ -211,7 +211,7 @@ ser = serial.Serial("/dev/ttyAMA0",9600)
 
 
 #mySql 오픈
-db = MySQLdb.connect("localhost", "leaqua", "123wasd", "leaqua")
+db = MySQLdb.connect("localhost", "leaqua", "__DB_PASSWORD__", "leaqua")
 dbcurs=db.cursor()
 #5분마다 저장 300 
 db_SaveDelay = 300
@@ -382,9 +382,9 @@ getAvr()
 
 
 #초기 시동시 마지막 설정값 읽어옴
-if os.path.isfile("/home/pi/leaqua/get_"+cpuserial+".xml"):
+if os.path.isfile("/home/pi/leaqua/python/get_"+cpuserial+".xml"):
     #SET 파일에서 읽어옴
-    stree = parse("/home/pi/leaqua/get_"+cpuserial+".xml")
+    stree = parse("/home/pi/leaqua/python/get_"+cpuserial+".xml")
     snote = stree.getroot()
 
     #set_temp_cali = snote.find("temp_calibration").text
@@ -665,10 +665,10 @@ def valueSet():
         os.chmod("/var/ramdisk/get_"+cpuserial+".xml", 0777)
         #설정값이 변했다면 프로그램 경로에도 기록해놓은다
         if changeVal == True:
-            f = open("/home/pi/leaqua/get_"+cpuserial+".xml", 'w')
+            f = open("/home/pi/leaqua/python/get_"+cpuserial+".xml", 'w')
             f.write(data) 
             f.close()
-            os.chmod("/home/pi/leaqua/get_"+cpuserial+".xml", 0777)
+            os.chmod("/home/pi/leaqua/python/get_"+cpuserial+".xml", 0777)
     except:
         print "file write error"
             

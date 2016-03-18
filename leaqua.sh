@@ -5,19 +5,65 @@ DIRECTORY=/home/pi/leaqua
 echo -e "\033[33m## APM 확인\033[0m"
 dpkg-query -W apache2 > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
-    echo " 먼저 apache2 패키지를 설치해 주세요"
-    exit 1
+    echo " apache2 패키지를 설치하고 설정합니다"
+    sudo apt-get -y install apache2
+    sudo a2enmod rewrite
+    #/etc/apache2/sites-available/000-default.conf  수정
+    sudo sed -i '/DocumentRoot/a\\n        \<Directory \/var\/www\/html\/\>\n            Options Indexes FollowSymLinks MultiViews\n            AllowOverride All\n            Order allow,deny\n            allow from all\n        </Directory>' /etc/apache2/sites-available/000-default.conf
+    sudo sed -i 's/*:[0-9][0-9]/*:88/g' /etc/apache2/sites-available/000-default.conf
+    grep "x-httpd-php .html" /etc/apache2/mods-available/mime.conf > /dev/null 2>&1
+    if [ "$?" -ne 0 ]; then
+        sudo sed -i '/TypesConfig \/etc\/mime.types/a\\n        AddType application\/x-httpd-php .html' /etc/apache2/mods-available/mime.conf
+    fi  
+    sudo sed -i 's/^Listen [0-9][0-9]/Listen 88/g' /etc/apache2/ports.conf
 fi
-dpkg-query -W php5 php5-fpm > /dev/null 2>&1
+
+dpkg-query -W php5-common php5 libapache2-mod-php5 > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
-    echo " 먼저 php5 php5-fpm 패키지를 설치해 주세요"
-    exit 1
+    echo " php5 패키지를 설치합니다"
+    sudo apt-get install php5-common php5 libapache2-mod-php5
 fi
 dpkg-query -W mysql-server mysql-client > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
-    echo " 먼저 mysql-server mysql-client 패키지를 설치해 주세요"
+    echo " mysql 패키지를 설치합니다"
+    sudo apt-get install mysql-server mysql-client
+fi
+
+
+
+## 중간에 입력 받아야 하는값들 미리 받아놓기 ...
+echo -n "MYSQL 패키지 설치시 설정한 root 암호를 입력하세요: "
+stty -echo
+read pass
+echo ""
+echo "" 
+stty echo
+
+echo -n "MYSQL에 생성하는 Leaqua DB 암호를 입력하세요: "
+stty -echo
+read leaquapass
+echo ""
+echo ""
+stty echo
+
+echo -n "MYSQL에 생성하는 Leaqua DB 암호 확인: "
+stty -echo
+read leaquapassconfirm
+echo ""
+echo ""
+stty echo
+
+if [ "$leaquapass" != "$leaquapassconfirm" ]; then
+    echo "Leaqua DB 암호가 일치하지 않습니다."
+    echo "설치를 종료합니다. 다시 시도해 주세요. "
+    echo ""
     exit 1
 fi
+
+read -n 1 -p "arduino 부트로더를 설치할까요? 부트로더는 새 atmega328 IC 에 처음 한번만 설치하면 됩니다.  (y/N)"
+bootloder_reple=$REPLY
+
+
 
 
 
@@ -61,7 +107,8 @@ if [ "$?" -eq 0 ]; then
 else
     echo " 자동 시간동기화 설정"
     sudo touch /var/spool/cron/crontabs/root 
-    sudo sed -i '$a\0 0 * * *  ntpdate -u 3.kr.pool.ntp.org' /var/spool/cron/crontabs/root
+    #sudo sed -i '$a\0 0 * * *  ntpdate -u 3.kr.pool.ntp.org' /var/spool/cron/crontabs/root
+    sudo echo "0 0 * * *  sudo ntpdate -u 3.kr.pool.ntp.org" | crontab
 fi
 read -n 1 -p "아무키나 누르세요...."
 
@@ -100,27 +147,6 @@ git clone https://github.com/acidb/mobiscroll/
 git clone https://github.com/amcharts/amcharts3
 cd $DIRECTORY
 
-echo -n "MYSQL root 암호를 입력하세요: "
-stty -echo
-read pass
-echo ""
-echo "" 
-stty echo
-
-echo -n "MYSQL에 생성하는 Leaqua DB 암호를 입력하세요: "
-stty -echo
-read leaquapass
-echo ""
-echo ""
-stty echo
-
-echo -n "MYSQL에 생성하는 Leaqua DB 암호 확인: "
-stty -echo
-read leaquapassconfirm
-echo ""
-echo ""
-stty echo
-
 if [ "$leaquapass" == "$leaquapassconfirm" ]; then
     touch /tmp/mysql_dbusersetup_temp 
     echo "create database IF NOT EXISTS leaqua;" >> /tmp/mysql_dbusersetup_temp 
@@ -134,9 +160,10 @@ else
 fi
 
 
-sudo sed -i "s/__DB_PASSWORD__/'$leaquapass'/g" /home/pi/leaqua/www/access.class.php
-sudo sed -i "s/__DB_PASSWORD__/'$leaquapass'/g" /home/pi/leaqua/www/index.html
-sudo sed -i "s/__DB_PASSWORD__/'$leaquapass'/g" /home/pi/leaqua/www/chart.html
+sudo sed -i "s/__DB_PASSWORD__/$leaquapass/g" /home/pi/leaqua/www/access.class.php
+sudo sed -i "s/__DB_PASSWORD__/$leaquapass/g" /home/pi/leaqua/www/index.html
+sudo sed -i "s/__DB_PASSWORD__/$leaquapass/g" /home/pi/leaqua/www/chart.html
+sudo sed -i "s/__DB_PASSWORD__/$leaquapass/g" /home/pi/leaqua/python/leaqua.py
 sudo cp -r /home/pi/leaqua/www/* /var/www/html/
 
 read -n 1 -p "아무키나 누르세요...."
@@ -155,6 +182,13 @@ dpkg-query -W python-psutil > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
     echo " python-psutil 패키지를 설치합니다"
     sudo apt-get -y install python-psutil
+fi
+read -n 1 -p "아무키나 누르세요...."
+
+dpkg-query -W python-pygame > /dev/null 2>&1
+if [ "$?" -ne 0 ]; then
+    echo " python-pygame 패키지를 설치합니다"
+    sudo apt-get -y install python-pygame
 fi
 read -n 1 -p "아무키나 누르세요...."
 
@@ -232,9 +266,9 @@ read -n 1 -p "아무키나 누르세요...."
 
 
 
-echo -e "\033[33m## atmega328p에 부트로더 설치\033[0m"
-read -n 1 -p "부트로더를 설치할까요? (y/N)"
-if [[ $REPLY == [yY] ]]; then
+# atmega328p에 부트로더 설치
+if [[ $bootloder_reple == [yY] ]]; then
+    echo -e "\033[33m## atmega328p에 부트로더 설치\033[0m"
     sudo avrdude -c gpio -p m328p -v -e  -U flash:w:/usr/share/arduino/hardware/arduino/bootloaders/optiboot/optiboot_atmega328.hex -U efuse:w:0x05:m -U hfuse:w:0xD6:m -U lfuse:w:0xFF:m
 fi
 
@@ -262,9 +296,9 @@ else
     cd sketch
     git clone https://code.google.com/r/kylecgordon-arscons/
 
-    cp /home/pi/leaqua/sketch/kylecgordon-arscons/SConstruct /home/pi/leaqua/arduino/SConstruct
+    sudo cp /home/pi/leaqua/sketch/kylecgordon-arscons/SConstruct /home/pi/leaqua/leaqua_arduino/SConstruct
     sudo cp -r /home/pi/leaqua/leaqua_arduino/libraries/Time /usr/share/arduino/libraries/
-    #아래 두줄은 컴파일 시 WProgram.h 관련 에러 때문에 제거 ㅠㅜ
+    #아래 두줄은 컴파일시 WProgram.h 관련 에러 때문에 제거
     sudo rm -r /usr/share/arduino/libraries/Robot_Control
     sudo rm -r /usr/share/arduino/libraries/Robot_Motor
     cd /home/pi/leaqua/leaqua_arduino
@@ -277,12 +311,59 @@ read -n 1 -p "아무키나 누르세요...."
 
 echo -e "\033[33m## 터치스크린 설치\033[0m"
 #/boot/config.txt 에 dtoverlay=hy28b, rotate=90, speed=48000000, fps=20 추가
+grep "dtoverlay=hy28b" /boot/config.txt > /dev/null 2>&1
+if [ "$?" -ne 0 ]; then
+    echo "  hy28b 드라이버를 사용하도록 설정합니다"
+    sudo sed -i '$a\dtparam=spi=on' /boot/config.txt 
+    sudo sed -i '$a\dtparam=i2c_arm=on' /boot/config.txt 
+    sudo sed -i '$a\dtoverlay=hy28b, rotate=90, speed=48000000, fps=20' /boot/config.txt
+fi
 #/boot/cmdline.txt 는 dwc_otg.lpm_enable=0   root=/dev/mmcblk0p2 rootfstype=ext4 elevator=deadline fsck.repair=yes rootwait fbcon=map:10 fbcon=font:ProFont6x11
+grep "fbcon=map:10" /boot/cmdline.txt > /dev/null 2>&1
+if [ "$?" -ne 0 ]; then
+    sudo sed -i "1s/rootwait/rootwait fbcon=map:10 fbcon=font:ProFont6x11/" /boot/cmdline.txt
+fi
+#/etc/udev/rules.d/95-ads7846.rules 이 파일에 아래 내용 추가
+if [ ! -f /etc/udev/rules.d/95-ads7846.rules ]; then
+cd /home/pi
+touch 95-ads7846.rules 
+echo "SUBSYSTEM==\"input\", ATTRS{name}==\"ADS7846 Touchscreen\", ENV{DEVNAME}==\"*event*\", SYMLINK+=\"input/touchscreen\"" >> 95-ads7846.rules
+sudo cp 95-ads7846.rules /etc/udev/rules.d/95-ads7846.rules
+rm 95-ads7846.rules
+cd /home/pi/leaqua
 
-#터치스크린 보정용 프로그램 설치
-#sudo apt-get install libts-bin evtest xinput python-dev python-pip
-#pip install evdev
+
+
+
+echo -e "\033[33m## 터치스크린 보정 프로그램 설치\033[0m"
+sudo apt-get install -y libts-bin evtest xinput python-dev python-pip
+pip install evdev
+
+
+############################################################################################
+#ts_calibrate 등에서는 문제가 없으나 pygame 에서 터치포인터가 벽에 붙어 버리는 문제가 있어서 해결
+############################################################################################
+#enable wheezy package sources
+echo "deb http://archive.raspbian.org/raspbian wheezy main" > /etc/apt/sources.list.d/wheezy.list
+#set stable as default package source (currently jessie)
+echo "APT::Default-release \"stable\";" > /etc/apt/apt.conf.d/10defaultRelease
+#set the priority for libsdl from wheezy higher then the jessie package
+echo "Package: libsdl1.2debian
+Pin: release n=jessie
+Pin-Priority: -10
+Package: libsdl1.2debian
+Pin: release n=wheezy
+Pin-Priority: 900
+" > /etc/apt/preferences.d/libsdl
+#install
+apt-get -y --force-yes install libsdl1.2debian/wheezy
+
+
+
 #sudo TSLIB_FBDEVICE=/dev/fb1 TSLIB_TSDEVICE=/dev/input/event0 ts_calibrate
+
+
+
 
 
 ## 사용자 이름을 받아들이고 인사를 출력한다
