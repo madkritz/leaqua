@@ -8,21 +8,10 @@ Leaqua 설치 프로그램입니다
 
 2 sudo raspi-config 실행하여 기본 설정
 
-    언어설정
-    4 Internationalisation Options 
-    1 Change Locale
-    [*] ko_KR.UTF-8 UTF-8 스페이스 눌러서 체크 - 엔터
-    Default locale for the system environment: 에서 en_GB.UTF-8 선택 엔터
-
     타임존설정
     4 Internationalisation Options 
     2 Change Timezone 
     Asia 선택 엔터-> Seoul 선택 엔터
-
-    키보드 레이아웃
-    4 Internationalisation Options 
-    3 Change Keyboard Layout 
-    [ ok ] Setting preliminary keymap...done.  자동으로 설정됨
 
     메모리 분할
     8 Advanced Options 
@@ -43,13 +32,11 @@ Leaqua 설치 프로그램입니다
     1 Expand Filesystem  
     raspi-config 종료하면 리부팅하면서 파일시스템확장됨
 
-3 apache2 , php , mysql 을 설치
+3 wget https://raw.githubusercontent.com/madkritz/leaqua/master/leaqua.sh
 
-4 wget https://raw.githubusercontent.com/madkritz/leaqua/master/leaqua.sh
+4 chmod +x leaqua.sh
 
-5 chmod +x leaqua.sh
-
-6 sudo ./leaqua.sh
+5 sudo ./leaqua.sh
 
 
 
