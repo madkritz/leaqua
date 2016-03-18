@@ -60,6 +60,7 @@ if [ "$?" -eq 0 ]; then
     echo " 이미 자동 시간동기화 설정이 되어 있습니다."
 else
     echo " 자동 시간동기화 설정"
+    sudo touch /var/spool/cron/crontabs/root 
     sudo sed -i '$a\0 0 * * *  ntpdate -u 3.kr.pool.ntp.org' /var/spool/cron/crontabs/root
 fi
 read -n 1 -p "아무키나 누르세요...."
@@ -93,6 +94,7 @@ read -n 1 -p "아무키나 누르세요...."
 
 
 echo -e "\033[33m## Webapp 설정\033[0m"
+git clone https://github.com/madkritz/leaqua
 cd /var/www/html
 git clone https://github.com/acidb/mobiscroll/
 git clone https://github.com/amcharts/amcharts3
