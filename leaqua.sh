@@ -2,7 +2,7 @@
 
 DIRECTORY=/home/pi/leaqua
 
-#sudo apt-get update 
+sudo apt-get update 
 
 echo -e "\033[33m## APM 확인\033[0m"
 dpkg-query -W apache2 > /dev/null 2>&1
@@ -11,8 +11,8 @@ if [ "$?" -ne 0 ]; then
     sudo apt-get -y install apache2
     sudo a2enmod rewrite
     #/etc/apache2/sites-available/000-default.conf  수정
-    sudo sed -i '/DocumentRoot/a\\n        \<Directory \/var\/www\/html\/\>\n            Options Indexes FollowSymLinks MultiViews\n            AllowOverride All\n            Order allow,deny\n            allow from all\n        </Directory>' /etc/apache2/sites-available/000-default.conf
-    sudo sed -i 's/*:[0-9][0-9]/*:88/g' /etc/apache2/sites-available/000-default.conf
+    #sudo sed -i '/DocumentRoot/a\\n        \<Directory \/var\/www\/html\/\>\n            Options Indexes FollowSymLinks MultiViews\n            AllowOverride All\n            Order allow,deny\n            allow from all\n        </Directory>' /etc/apache2/sites-available/000-default.conf
+    #sudo sed -i 's/*:[0-9][0-9]/*:88/g' /etc/apache2/sites-available/000-default.conf
     grep "x-httpd-php .html" /etc/apache2/mods-available/mime.conf > /dev/null 2>&1
     if [ "$?" -ne 0 ]; then
         sudo sed -i '/TypesConfig \/etc\/mime.types/a\\n        AddType application\/x-httpd-php .html' /etc/apache2/mods-available/mime.conf
@@ -173,26 +173,21 @@ read -n 1 -p "아무키나 누르세요...."
 echo -e "\033[33m## Webapp 설정\033[0m"
 git clone https://github.com/madkritz/leaqua
 cd /var/www/html
-git clone https://github.com/acidb/mobiscroll/
 git clone https://github.com/amcharts/amcharts3
 cd $DIRECTORY
+sudo mv /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/000-default.conf.bak
+sudo cp /home/pi/leaqua/apache-default.conf /etc/apache2/sites-available/000-default.conf
 
-if [ "$leaquapass" == "$leaquapassconfirm" ]; then
-    touch /tmp/mysql_dbusersetup_temp 
-    echo "create database IF NOT EXISTS leaqua;" >> /tmp/mysql_dbusersetup_temp 
-    echo "GRANT all privileges on leaqua.* TO leaqua@localhost IDENTIFIED BY '$leaquapass';" >> /tmp/mysql_dbusersetup_temp  
-    mysql -u root -p$pass mysql < /tmp/mysql_dbusersetup_temp 
-    rm -f /tmp/mysql_dbusersetup_temp
-    mysql -u leaqua -p$leaquapass leaqua < leaqua.sql
-    touch /tmp/leaqua_usersetup_temp
-    echo "insert into leaqua_users values('','$app_user_id',SHA1('$app_user_password'),'',1);" > /tmp/leaqua_usersetup_temp
-    mysql -uleaqua -p$leaquapass leaqua < /tmp/leaqua_usersetup_temp
-    rm -f /tmp/leaqua_usersetup_temp
-else
-    echo -n "암호가 다릅니다"
-    exit
-fi
-
+touch /tmp/mysql_dbusersetup_temp 
+echo "create database IF NOT EXISTS leaqua;" >> /tmp/mysql_dbusersetup_temp 
+echo "GRANT all privileges on leaqua.* TO leaqua@localhost IDENTIFIED BY '$leaquapass';" >> /tmp/mysql_dbusersetup_temp  
+mysql -u root -p$pass mysql < /tmp/mysql_dbusersetup_temp 
+rm -f /tmp/mysql_dbusersetup_temp
+mysql -u leaqua -p$leaquapass leaqua < leaqua.sql
+touch /tmp/leaqua_usersetup_temp
+echo "insert into leaqua_users values('','$app_user_id',SHA1('$app_user_password'),'',1);" > /tmp/leaqua_usersetup_temp
+mysql -uleaqua -p$leaquapass leaqua < /tmp/leaqua_usersetup_temp
+rm -f /tmp/leaqua_usersetup_temp
 
 sudo sed -i "s/__DB_PASSWORD__/$leaquapass/g" /home/pi/leaqua/www/access.class.php
 sudo sed -i "s/__DB_PASSWORD__/$leaquapass/g" /home/pi/leaqua/www/index.html
@@ -382,8 +377,6 @@ pip install evdev
 #Thanks to heine in the adafruit forums!
 #https://forums.adafruit.com/viewtopic.php?f=47&t=76169&p=439894#p435225
 ############################################################################################
-
-
 #enable wheezy package sources
 echo "deb http://archive.raspbian.org/raspbian wheezy main" > /etc/apt/sources.list.d/wheezy.list
 #set stable as default package source (currently jessie)
