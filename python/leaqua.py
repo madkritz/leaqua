@@ -712,7 +712,8 @@ def timerHandler():
         text_ph = font2.render(phPrint, 1, (WHITE))
         orpPrint = "ORP  : "+str(at_orp)+"mv"
         text_orp = font2.render(orpPrint, 1, (WHITE))
-        text_ser = font2.render(sertext, 1, (WHITE))
+        #sertext 는 디버깅을 위해서 atmega328 과 통신된 값을 출력하게 된다 
+        #text_ser = font2.render(sertext, 1, (WHITE))
     elif display_mode == 1:
         CPU_temp = str(get_cpu_temperature())
         CPU_usage = str(get_cpu_usage())
