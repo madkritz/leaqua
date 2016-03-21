@@ -377,8 +377,6 @@ pip install evdev
 #Thanks to heine in the adafruit forums!
 #https://forums.adafruit.com/viewtopic.php?f=47&t=76169&p=439894#p435225
 ############################################################################################
-#update 를 한번 더 해줘야 libsdl1.2debian 에러가 안남
-sudo apt-get update 
 #enable wheezy package sources
 echo "deb http://archive.raspbian.org/raspbian wheezy main" > /etc/apt/sources.list.d/wheezy.list
 #set stable as default package source (currently jessie)
