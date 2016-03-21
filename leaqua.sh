@@ -2,6 +2,24 @@
 
 DIRECTORY=/home/pi/leaqua
 
+############################################################################################
+#ts_calibrate 등에서는 문제가 없으나 pygame 에서 터치포인터가 벽에 붙어 버리는 문제가 있어서 해결
+#Thanks to heine in the adafruit forums!
+#https://forums.adafruit.com/viewtopic.php?f=47&t=76169&p=439894#p435225
+############################################################################################
+#enable wheezy package sources
+echo "deb http://archive.raspbian.org/raspbian wheezy main" > /etc/apt/sources.list.d/wheezy.list
+#set stable as default package source (currently jessie)
+echo "APT::Default-release \"stable\";" > /etc/apt/apt.conf.d/10defaultRelease
+#set the priority for libsdl from wheezy higher then the jessie package
+echo "Package: libsdl1.2debian
+Pin: release n=jessie
+Pin-Priority: -10
+Package: libsdl1.2debian
+Pin: release n=wheezy
+Pin-Priority: 900
+" > /etc/apt/preferences.d/libsdl
+
 sudo apt-get update 
 
 echo -e "\033[33m## APM 확인\033[0m"
@@ -377,21 +395,11 @@ pip install evdev
 #Thanks to heine in the adafruit forums!
 #https://forums.adafruit.com/viewtopic.php?f=47&t=76169&p=439894#p435225
 ############################################################################################
-#enable wheezy package sources
-echo "deb http://archive.raspbian.org/raspbian wheezy main" > /etc/apt/sources.list.d/wheezy.list
-#set stable as default package source (currently jessie)
-echo "APT::Default-release \"stable\";" > /etc/apt/apt.conf.d/10defaultRelease
-#set the priority for libsdl from wheezy higher then the jessie package
-echo "Package: libsdl1.2debian
-Pin: release n=jessie
-Pin-Priority: -10
-Package: libsdl1.2debian
-Pin: release n=wheezy
-Pin-Priority: 900
-" > /etc/apt/preferences.d/libsdl
-#install  아래 libsdl1.2debian 설치 관련내용은 재시동후 설치해야 에러가 없음 
-#sudo apt-get update
-#sudo apt-get -y --force-yes install libsdl1.2debian/wheezy
+#libsdl1.2debian  install   
+sudo apt-get -y --force-yes install libsdl1.2debian/wheezy
+
+
+
 #sudo TSLIB_FBDEVICE=/dev/fb1 TSLIB_TSDEVICE=/dev/input/event0 ts_calibrate
 
 echo "
