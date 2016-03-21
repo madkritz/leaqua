@@ -1,4 +1,4 @@
-//Board Firmware 2.0
+//Board Firmware 2.03c
 #include <Time.h> 
 #include <EEPROM.h> 
 #include <Wire.h>
