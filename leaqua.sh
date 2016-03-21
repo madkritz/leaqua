@@ -2,7 +2,7 @@
 
 DIRECTORY=/home/pi/leaqua
 
-sudo apt-get update 
+#sudo apt-get update 
 
 echo -e "\033[33m## APM 확인\033[0m"
 dpkg-query -W apache2 > /dev/null 2>&1
@@ -25,10 +25,10 @@ if [ "$?" -ne 0 ]; then
     echo " php5 패키지를 설치합니다"
     sudo apt-get -y install php5-common php5 libapache2-mod-php5
 fi
-dpkg-query -W mysql-server mysql-client > /dev/null 2>&1
+dpkg-query -W mysql-server mysql-client php5-mysql > /dev/null 2>&1
 if [ "$?" -ne 0 ]; then
     echo " mysql 패키지를 설치합니다"
-    sudo apt-get -y install mysql-server mysql-client
+    sudo apt-get -y install mysql-server mysql-client php5-mysql
 fi
 
 
@@ -57,6 +57,34 @@ stty echo
 
 if [ "$leaquapass" != "$leaquapassconfirm" ]; then
     echo "Leaqua DB 암호가 일치하지 않습니다."
+    echo "설치를 종료합니다. 다시 시도해 주세요. "
+    echo ""
+    exit 1
+fi
+
+echo -n "Leaqua 웹앱 로그인용 아이디를 설정합니다: "
+stty -echo
+read app_user_id
+echo ""
+echo ""
+stty echo
+
+echo -n "Leaqua 웹앱 로그인용 암호를 설정합니다: "
+stty -echo
+read app_user_password
+echo ""
+echo ""
+stty echo
+
+echo -n "Leaqua 웹앱 로그인용 암호 확인: "
+stty -echo
+read app_user_password_confirm
+echo ""
+echo ""
+stty echo
+
+if [ "$app_user_password" != "$app_user_password_confirm" ]; then
+    echo "Leaqua 웹앱 로그인용 암호가 일치하지 않습니다."
     echo "설치를 종료합니다. 다시 시도해 주세요. "
     echo ""
     exit 1
@@ -156,6 +184,10 @@ if [ "$leaquapass" == "$leaquapassconfirm" ]; then
     mysql -u root -p$pass mysql < /tmp/mysql_dbusersetup_temp 
     rm -f /tmp/mysql_dbusersetup_temp
     mysql -u leaqua -p$leaquapass leaqua < leaqua.sql
+    touch /tmp/leaqua_usersetup_temp
+    echo "insert into leaqua_users values('','$app_user_id',SHA1('$app_user_password'),'',1);" > /tmp/leaqua_usersetup_temp
+    mysql -uleaqua -p$leaquapass leaqua < /tmp/leaqua_usersetup_temp
+    rm -f /tmp/leaqua_usersetup_temp
 else
     echo -n "암호가 다릅니다"
     exit
@@ -240,24 +272,27 @@ if [ "$?" -eq 0 ]; then
     echo " 이미 boards.txt 파일에 Leaqua 보드설정이 되어 있습니다."
 else
     echo "  boards.txt 파일에 Leaqua 보드를 등록합니다."
-    sudo sed -i '$a\##############################################################' /usr/share/arduino/hardware/arduino/boards.txt
-    sudo sed -i '$a\leaqua.name=Raspberrypi with ATmega328p GPIO' /usr/share/arduino/hardware/arduino/boards.txt
-    sudo sed -i '$a\leaqua.upload.using=gpio' /usr/share/arduino/hardware/arduino/boards.txt
-    sudo sed -i '$a\leaqua.upload.protocol=gpio' /usr/share/arduino/hardware/arduino/boards.txt
-    sudo sed -i '$a\leaqua.upload.maximum_size=30720' /usr/share/arduino/hardware/arduino/boards.txt
-    sudo sed -i '$a\leaqua.upload.speed=57600' /usr/share/arduino/hardware/arduino/boards.txt
-    sudo sed -i '$a\leaqua.upload.disable_flushing=true' /usr/share/arduino/hardware/arduino/boards.txt
-    sudo sed -i '$a\leaqua.bootloader.low_fuses=0xFF' /usr/share/arduino/hardware/arduino/boards.txt
-    sudo sed -i '$a\leaqua.bootloader.high_fuses=0xDA' /usr/share/arduino/hardware/arduino/boards.txt
-    sudo sed -i '$a\leaqua.bootloader.extended_fuses=0x05' /usr/share/arduino/hardware/arduino/boards.txt
-    sudo sed -i '$a\leaqua.bootloader.path=optiboot' /usr/share/arduino/hardware/arduino/boards.txt
-    sudo sed -i '$a\leaqua.bootloader.file=optiboot_atmega328.hex' /usr/share/arduino/hardware/arduino/boards.txt
-    sudo sed -i '$a\leaqua.bootloader.unlock_bits=0x3F' /usr/share/arduino/hardware/arduino/boards.txt
-    sudo sed -i '$a\leaqua.bootloader.lock_bits=0x0F' /usr/share/arduino/hardware/arduino/boards.txt
-    sudo sed -i '$a\leaqua.build.mcu=atmega328p' /usr/share/arduino/hardware/arduino/boards.txt
-    sudo sed -i '$a\leaqua.build.f_cpu=16000000L' /usr/share/arduino/hardware/arduino/boards.txt
-    sudo sed -i '$a\leaqua.build.core=arduino' /usr/share/arduino/hardware/arduino/boards.txt
-    sudo sed -i '$a\leaqua.build.variant=standard' /usr/share/arduino/hardware/arduino/boards.txt
+       
+    echo " 
+##############################################################
+
+leaqua.name=Raspberrypi with ATmega328p GPIO
+leaqua.upload.using=gpio
+leaqua.upload.protocol=gpio
+leaqua.upload.maximum_size=30720
+leaqua.upload.speed=57600
+leaqua.upload.disable_flushing=true
+leaqua.bootloader.low_fuses=0xFF
+leaqua.bootloader.high_fuses=0xDA
+leaqua.bootloader.extended_fuses=0x05
+leaqua.bootloader.path=optiboot
+leaqua.bootloader.file=optiboot_atmega328.hex
+leaqua.bootloader.unlock_bits=0x3F
+leaqua.bootloader.lock_bits=0x0F
+leaqua.build.mcu=atmega328p
+leaqua.build.f_cpu=16000000L
+leaqua.build.core=arduino
+leaqua.build.variant=standard" >> /usr/share/arduino/hardware/arduino/boards.txt
 fi
 
 sudo sed -i '/"gpio"/,/mosi/s/reset = 8/reset = 4/g' /etc/avrdude.conf
@@ -344,7 +379,11 @@ pip install evdev
 
 ############################################################################################
 #ts_calibrate 등에서는 문제가 없으나 pygame 에서 터치포인터가 벽에 붙어 버리는 문제가 있어서 해결
+#Thanks to heine in the adafruit forums!
+#https://forums.adafruit.com/viewtopic.php?f=47&t=76169&p=439894#p435225
 ############################################################################################
+
+
 #enable wheezy package sources
 echo "deb http://archive.raspbian.org/raspbian wheezy main" > /etc/apt/sources.list.d/wheezy.list
 #set stable as default package source (currently jessie)
@@ -358,7 +397,7 @@ Pin: release n=wheezy
 Pin-Priority: 900
 " > /etc/apt/preferences.d/libsdl
 #install
-apt-get -y --force-yes install libsdl1.2debian/wheezy
+sudo apt-get -y --force-yes install libsdl1.2debian/wheezy
 
 
 

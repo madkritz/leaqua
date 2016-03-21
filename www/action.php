@@ -1,9 +1,4 @@
 <?php
-
-@extract($HTTP_GET_VARS);
-@extract($HTTP_POST_VARS);
-@extract($HTTP_SERVER_VARS);
-@extract($HTTP_ENV_VARS);
 @extract($_POST);
 @extract($_GET);
 
@@ -42,7 +37,7 @@ if (($mode == "save_value") or ($mode == "set_light")) {
 		$set_co2_start_value = $set_co2_startv;
 		$set_co2_end_value = $set_co2_endv;
 		
-    if($switch_light == "") { $switch_light = "0";}
+        if($switch_light == "") { $switch_light = "0";}
 
 		$fn = "/var/ramdisk/set_".$cpuSN.".xml";
 	
