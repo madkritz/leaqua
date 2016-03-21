@@ -331,11 +331,13 @@ else
     #아래 두줄은 컴파일시 WProgram.h 관련 에러 때문에 제거
     sudo rm -r /usr/share/arduino/libraries/Robot_Control
     sudo rm -r /usr/share/arduino/libraries/Robot_Motor
-    cd /home/pi/leaqua/leaqua_arduino
-    #소스코드 컴파일 해서 펌웨어 업로드
-    sudo scons ARDUINO_PORT=/dev/ttyS0 ARDUINO_BOARD=leaqua ARDUINO_VER=1.0.1 ARDUINO_HOME=/usr/share/arduino upload
-    cd /home/pi/leaqua
 fi
+echo -e "\033[33m## leaqua_arduino를 컴파일 하고 업로드 합니다\033[0m"
+cd /home/pi/leaqua/leaqua_arduino
+#소스코드 컴파일 해서 펌웨어 업로드
+sudo scons ARDUINO_PORT=/dev/ttyS0 ARDUINO_BOARD=leaqua ARDUINO_VER=1.0.1 ARDUINO_HOME=/usr/share/arduino upload
+cd /home/pi/leaqua
+
 read -n 1 -p "아무키나 누르세요...."
 
 
