@@ -38,7 +38,7 @@ pygame.mouse.set_visible(False)
 print "Setting fullscreen..."
 # 320x240 화면을 설정..
 screen = pygame.display.set_mode((320, 240), 0, 32)
-pygame.display.set_caption('LeAqua V2.0')
+pygame.display.set_caption('LeAqua V2.03')
 
 
 # CPU 시리얼 번호를 가져옴

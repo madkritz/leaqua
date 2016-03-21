@@ -160,9 +160,9 @@ else
     sudo mount -a
 fi
 
-if [ ! -h "/var/www/html/tmp" ]; then
-    sudo ln -s /var/ramdisk /var/www/html/tmp
-    sudo chmod 777 /var/www/html/tmp
+if [ ! -h "/home/pi/leaqua/www/tmp" ]; then
+    sudo ln -s /var/ramdisk /home/pi/leaqua/www/tmp
+    sudo chmod 777 /home/pi/leaqua/www/tmp
 fi    
 read -n 1 -p "아무키나 누르세요...."
 
@@ -193,7 +193,7 @@ sudo sed -i "s/__DB_PASSWORD__/$leaquapass/g" /home/pi/leaqua/www/access.class.p
 sudo sed -i "s/__DB_PASSWORD__/$leaquapass/g" /home/pi/leaqua/www/index.html
 sudo sed -i "s/__DB_PASSWORD__/$leaquapass/g" /home/pi/leaqua/www/chart.html
 sudo sed -i "s/__DB_PASSWORD__/$leaquapass/g" /home/pi/leaqua/python/leaqua.py
-sudo cp -r /home/pi/leaqua/www/* /var/www/html/
+#sudo cp -r /home/pi/leaqua/www/* /var/www/html/
 
 read -n 1 -p "아무키나 누르세요...."
 
