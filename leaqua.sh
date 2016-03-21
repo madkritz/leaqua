@@ -389,9 +389,9 @@ Package: libsdl1.2debian
 Pin: release n=wheezy
 Pin-Priority: 900
 " > /etc/apt/preferences.d/libsdl
-#install
-sudo apt-get -y --force-yes install libsdl1.2debian/wheezy
-
+#install  아래 libsdl1.2debian 설치 관련내용은 재시동후 설치해야 에러가 없음 
+#sudo apt-get update
+#sudo apt-get -y --force-yes install libsdl1.2debian/wheezy
 #sudo TSLIB_FBDEVICE=/dev/fb1 TSLIB_TSDEVICE=/dev/input/event0 ts_calibrate
 
 echo "
