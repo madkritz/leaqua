@@ -63,11 +63,8 @@ if [ "$leaquapass" != "$leaquapassconfirm" ]; then
 fi
 
 echo -n "Leaqua 웹앱 로그인용 아이디를 설정합니다: "
-stty -echo
 read app_user_id
 echo ""
-echo ""
-stty echo
 
 echo -n "Leaqua 웹앱 로그인용 암호를 설정합니다: "
 stty -echo
@@ -160,19 +157,14 @@ else
     sudo mount -a
 fi
 
-if [ ! -h "/home/pi/leaqua/www/tmp" ]; then
-    sudo ln -s /var/ramdisk /home/pi/leaqua/www/tmp
-    sudo chmod 777 /home/pi/leaqua/www/tmp
-fi    
 read -n 1 -p "아무키나 누르세요...."
-
 
 
 
 
 echo -e "\033[33m## Webapp 설정\033[0m"
 git clone https://github.com/madkritz/leaqua
-cd /var/www/html
+cd /home/pi/leaqua/www/
 git clone https://github.com/amcharts/amcharts3
 cd $DIRECTORY
 sudo mv /etc/apache2/sites-available/000-default.conf /etc/apache2/sites-available/000-default.conf.bak
@@ -194,6 +186,12 @@ sudo sed -i "s/__DB_PASSWORD__/$leaquapass/g" /home/pi/leaqua/www/index.html
 sudo sed -i "s/__DB_PASSWORD__/$leaquapass/g" /home/pi/leaqua/www/chart.html
 sudo sed -i "s/__DB_PASSWORD__/$leaquapass/g" /home/pi/leaqua/python/leaqua.py
 #sudo cp -r /home/pi/leaqua/www/* /var/www/html/
+
+#램디스크 링크 설정
+if [ ! -h "/home/pi/leaqua/www/tmp" ]; then
+    sudo ln -s /var/ramdisk /home/pi/leaqua/www/tmp
+    sudo chmod 777 /home/pi/leaqua/www/tmp
+fi    
 
 read -n 1 -p "아무키나 누르세요...."
 
@@ -377,6 +375,8 @@ pip install evdev
 #Thanks to heine in the adafruit forums!
 #https://forums.adafruit.com/viewtopic.php?f=47&t=76169&p=439894#p435225
 ############################################################################################
+#update 를 한번 더 해줘야 libsdl1.2debian 에러가 안남
+sudo apt-get update 
 #enable wheezy package sources
 echo "deb http://archive.raspbian.org/raspbian wheezy main" > /etc/apt/sources.list.d/wheezy.list
 #set stable as default package source (currently jessie)
@@ -392,20 +392,16 @@ Pin-Priority: 900
 #install
 sudo apt-get -y --force-yes install libsdl1.2debian/wheezy
 
-
-
 #sudo TSLIB_FBDEVICE=/dev/fb1 TSLIB_TSDEVICE=/dev/input/event0 ts_calibrate
 
+echo "
+설치가 완료되었습니다!
 
+입력하신 정보는 다음과 같습니다. 
 
+웹앱의 사용자 아이디 :  $app_user_id
+웹앱의 사용자 암호 : $app_user_password
 
+재시동 한다음  sudo TSLIB_FBDEVICE=/dev/fb1 TSLIB_TSDEVICE=/dev/input/event0 ts_calibrate 를 실행해 주세요
 
-## 사용자 이름을 받아들이고 인사를 출력한다
-#echo -n "Enter your name: "
-# read user_name
-## 사용자가 아무 것도 입력하지 않으면:
-#if [ -z "$user_name" ]; then
-#    echo "You did not tell me your name!"
-#    exit
-#fi
-echo "설치가 완료되었습니다!"
+"
