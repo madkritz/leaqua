@@ -397,7 +397,7 @@ pip install evdev
 #libsdl1.2debian  install   
 sudo apt-get -y --force-yes install libsdl1.2debian/wheezy
 
-
+sudo chmod +x /home/pi/leaqua/autorun.sh
 
 #sudo TSLIB_FBDEVICE=/dev/fb1 TSLIB_TSDEVICE=/dev/input/event0 ts_calibrate
 
