@@ -608,7 +608,7 @@ def valueSet():
     if light_stat == True:
         _light_switch = "1"
     else:
-    	  _light_switch = "0"
+    	_light_switch = "0"
     
     changeVal = False
         	      

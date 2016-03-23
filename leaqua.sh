@@ -152,7 +152,6 @@ if [ "$?" -eq 0 ]; then
 else
     echo " 자동 시간동기화 설정"
     sudo touch /var/spool/cron/crontabs/root 
-    #sudo sed -i '$a\0 0 * * *  ntpdate -u 3.kr.pool.ntp.org' /var/spool/cron/crontabs/root
     sudo echo "0 0 * * *  sudo ntpdate -u 3.kr.pool.ntp.org" | crontab
 fi
 read -n 1 -p "아무키나 누르세요...."
